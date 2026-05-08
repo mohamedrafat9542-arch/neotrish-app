@@ -1277,37 +1277,31 @@ function toast(msg,t='nfo'){const el=document.createElement('div');el.className=
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // وظيفة لحفظ الحالة الكاملة للنظام
-  function syncToCloud() {
-    const fullData = {
-      systemState: A, // المتغير الأساسي لنظامك
-      inventory: mar  // بيانات المخزون
-    };
-    db.ref('neotrish_cloud').set(fullData);
-  }
-
-  // وظيفة لجلب البيانات وتحديث الواجهة
+  // هذه الدالة تجلب البيانات من السحاب وتضعها في نظامك
   function loadFromCloud() {
-    db.ref('neotrish_cloud').once('value', (snapshot) => {
+    db.ref('system_data').once('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        if (data.systemState) Object.assign(A, data.systemState);
-        if (data.inventory) Object.assign(mar, data.inventory);
-        
-        // تحديث الشاشة (نفس الوظائف الموجودة في نظامك الأصلي)
-        if (typeof rDash === "function") rDash(); 
+        // تحديث متغيرات النظام الأساسية
+        if (typeof A !== 'undefined') Object.assign(A, data);
+        // تحديث واجهة المستخدم
+        if (typeof rDash === "function") rDash();
         if (typeof bMT === "function") bMT();
       }
     });
   }
 
-  // الربط مع أحداث النظام
+  // هذه الدالة ترسل أي تغيير تقوم به للسحاب فوراً
+  function syncToCloud() {
+    if (typeof A !== 'undefined') {
+      db.ref('system_data').set(A);
+    }
+  }
+
   window.addEventListener('load', () => {
-    loadFromCloud();
-    // حفظ البيانات عند أي تغيير في المدخلات
-    document.body.addEventListener('input', syncToCloud);
-    // حفظ البيانات عند الضغط على أي زر (مثل حفظ أو إضافة)
-    document.body.addEventListener('click', () => setTimeout(syncToCloud, 500));
+    loadFromCloud(); // جلب البيانات عند فتح الصفحة
+    document.body.addEventListener('input', syncToCloud); // حفظ عند الكتابة
+    document.body.addEventListener('click', () => setTimeout(syncToCloud, 500)); // حفظ عند الضغط
   });
 </script>
 </body>
