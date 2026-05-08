@@ -1261,12 +1261,15 @@ function toast(msg,t='nfo'){const el=document.createElement('div');el.className=
     save();
   }
 
-  A.cy=2026; A.cm=0;
-  bYS();bMT();
-  document.getElementById('coNm').textContent=A.company;
-  rDash();
-})();
+ // --- بداية الجزء الذي تم إصلاحه ---
+    A.cy=2026; A.cm=0;
+    bYS();bMT();
+    document.getElementById('coNm').textContent=A.company;
+    rDash();
+  })();
 </script>
+
+<!-- Firebase المطور والمضمون -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -1274,24 +1277,22 @@ function toast(msg,t='nfo'){const el=document.createElement('div');el.className=
   const firebaseConfig = {
     databaseURL: "https://neotrish-app-default-rtdb.firebaseio.com/"
   };
-  firebase.initializeApp(firebaseConfig);
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
   const db = firebase.database();
 
-  // هذه الدالة تجلب البيانات من السحاب وتضعها في نظامك
   function loadFromCloud() {
     db.ref('system_data').once('value', (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        // تحديث متغيرات النظام الأساسية
-        if (typeof A !== 'undefined') Object.assign(A, data);
-        // تحديث واجهة المستخدم
+      if (data && typeof A !== 'undefined') {
+        Object.assign(A, data);
         if (typeof rDash === "function") rDash();
         if (typeof bMT === "function") bMT();
       }
     });
   }
 
-  // هذه الدالة ترسل أي تغيير تقوم به للسحاب فوراً
   function syncToCloud() {
     if (typeof A !== 'undefined') {
       db.ref('system_data').set(A);
@@ -1299,9 +1300,9 @@ function toast(msg,t='nfo'){const el=document.createElement('div');el.className=
   }
 
   window.addEventListener('load', () => {
-    loadFromCloud(); // جلب البيانات عند فتح الصفحة
-    document.body.addEventListener('input', syncToCloud); // حفظ عند الكتابة
-    document.body.addEventListener('click', () => setTimeout(syncToCloud, 500)); // حفظ عند الضغط
+    loadFromCloud();
+    document.body.addEventListener('input', syncToCloud);
+    document.body.addEventListener('click', () => setTimeout(syncToCloud, 500));
   });
 </script>
 </body>
