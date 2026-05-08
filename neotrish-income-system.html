@@ -1267,5 +1267,46 @@ function toast(msg,t='nfo'){const el=document.createElement('div');el.className=
   rDash();
 })();
 </script>
+  <!-- Firebase Libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+  // Firebase Configuration for Neotrish App
+  const firebaseConfig = {
+    databaseURL: "https://neotrish-app-default-rtdb.firebaseio.com/"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Function to save data to the cloud on input
+  function uploadData() {
+    const inputs = document.querySelectorAll('input, select, textarea');
+    const data = {};
+    inputs.forEach(input => {
+      if (input.id) data[input.id] = input.value;
+    });
+    db.ref('system_data').set(data);
+  }
+
+  // Function to load data from the cloud on page load
+  function downloadData() {
+    db.ref('system_data').once('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        Object.keys(data).forEach(id => {
+          const input = document.getElementById(id);
+          if (input) input.value = data[id];
+        });
+      }
+    });
+  }
+
+  // Initialize data loading and real-time syncing
+  window.onload = () => {
+    downloadData();
+    document.body.addEventListener('input', uploadData);
+  };
+</script>
 </body>
 </html>
