@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEOTRISH</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:#ddd;padding:15px}
+.page{background:#fff;max-width:900px;margin:auto;border:2px solid #111;font-family:'Cairo',sans-serif}
+
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:3px solid #111;background:#fff}
+.logo{font-size:26px;font-weight:900;letter-spacing:2px;color:#111}
+.logo span{color:#2e7d32}
+.hdr-sub{font-weight:700;font-size:14px}
+
+/* BODY */
+.fb{padding:18px}
+
+/* INFO FIELDS */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;border:2px solid #111;margin-bottom:14px}
+.info-cell{padding:10px 12px;display:flex;align-items:center;gap:8px;border-left:2px solid #111}
+.info-cell:last-child,.info-cell.full{border-left:none}
+.info-cell.full{grid-column:span 2;border-top:2px solid #111;border-left:none}
+.info-cell label{font-size:13px;font-weight:700;white-space:nowrap;color:#111}
+.info-cell input{flex:1;border:none;border-bottom:1px solid #aaa;outline:none;font-family:‘Cairo’;font-size:13px;padding:2px 4px;color:#111}
+.vspan{display:none;flex:1;font-size:13px;font-weight:700;color:#111;border-bottom:1px solid #ccc}
+
+/* SUB TYPE — compact inline */
+.subtype-bar{border:2px solid #111;margin-bottom:14px;overflow:hidden}
+.subtype-bar-head{background:#111;color:#F5C800;padding:8px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.subtype-bar-opts{display:flex;border-top:none}
+.st-pill{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 6px;cursor:pointer;user-select:none;border-left:2px solid #111;font-size:12px;font-weight:700;color:#555;background:#fff;transition:background .15s,color .15s;text-align:center;position:relative}
+.st-pill:last-child{border-left:none}
+.st-pill:hover{background:#fffbe6;color:#111}
+.st-pill.active{background:#111;color:#F5C800}
+.st-pill .st-pill-ico{font-size:16px;line-height:1}
+.st-pill .st-pill-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;border:2px solid #ccc;background:#fff}
+.st-pill.active .st-pill-dot{background:#F5C800;border-color:#F5C800}
+/* Delivery location row */
+.loc-row{display:none;background:#f0f7ff;border-top:2px solid #3498db;padding:12px 14px;flex-direction:column;gap:8px}
+.loc-row.show{display:flex}
+.loc-step{font-size:12px;font-weight:700;color:#1a5276;margin-bottom:2px}
+.loc-actions{display:flex;gap:8px;flex-wrap:wrap}
+.loc-open-btn{display:flex;align-items:center;gap:6px;background:#3498db;color:#fff;border:none;border-radius:6px;padding:9px 14px;font-family:‘Cairo’;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
+.loc-open-btn:active{background:#2980b9}
+.loc-paste-wrap{display:flex;align-items:center;gap:6px;width:100%}
+.loc-paste-input{flex:1;border:2px solid #3498db;border-radius:6px;padding:8px 10px;font-family:‘Cairo’;font-size:12px;color:#111;outline:none;background:#fff;min-width:0}
+.loc-paste-input::placeholder{color:#aaa}
+.loc-paste-input.filled{border-color:#2ecc71;background:#f0fff4}
+.loc-paste-btn{background:#3498db;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-family:‘Cairo’;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.loc-confirm{font-size:11px;color:#27ae60;font-weight:700;display:none}
+.loc-confirm.show{display:block}
+.loc-spinner{display:none;width:16px;height:16px;border:2px solid rgba(52,152,219,.3);border-top-color:#3498db;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* capture */
+.vspan-st{display:none;font-size:12px;font-weight:700;color:#111;padding:6px 14px;background:#f5f5f5;border-top:1px solid #ddd}
+body.cap .vspan-st{display:block!important}
+body.cap .subtype-bar-opts{display:none!important}
+body.cap .loc-row{display:none!important}
+
+/* SAME-DAY PICKUP */
+.sameday-cell{grid-column:span 2;border-top:2px solid #111;border-left:none;background:#fffbe6;padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sameday-label{font-size:13px;font-weight:700;color:#7a5c00;white-space:nowrap}
+.sameday-opts{display:flex;gap:18px;flex-wrap:wrap}
+.sd-opt{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:700;color:#111;user-select:none}
+.sameday-badge{display:none;background:#2e7d32;color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;white-space:nowrap}
+.vspan-sd{display:none;font-size:13px;font-weight:700;color:#7a5c00}
+
+/* SELECTION GRID */
+.sel-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1.3fr;border:2px solid #111;margin-bottom:16px}
+.sg-col{border-left:2px solid #111;padding:0}
+.sg-col:last-child{border-left:none}
+.sg-head{background:#111;color:#F5C800;text-align:center;padding:8px 5px;font-size:13px;font-weight:700}
+.sg-body{padding:10px 8px}
+.opt-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:13px;font-weight:600;color:#111;user-select:none}
+.opt-row:last-child{margin-bottom:0}
+.chk{width:20px;height:20px;border:2px solid #111;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;background:#fff;color:#F5C800}
+.chk.on{background:#111}
+.opt-row.hidden{display:none}
+
+/* PRICE BAR */
+.price-bar{background:#111;color:#F5C800;text-align:center;padding:14px;font-size:20px;font-weight:900;margin-bottom:16px}
+
+/* MEAL CHOICE */
+.mc-grid{display:grid;grid-template-columns:1fr 1fr;border:2px solid #111;margin-bottom:16px}
+.mc-opt{display:flex;align-items:center;gap:10px;padding:14px 12px;cursor:pointer;font-size:14px;font-weight:700;color:#111;border-left:2px solid #111;user-select:none}
+.mc-opt:last-child{border-left:none}
+
+/* PLANNER */
+.planner{display:none;border:2px solid #111;margin-bottom:18px}
+.planner.show{display:block}
+.pl-head{background:#111;color:#F5C800;padding:10px 14px;font-size:13px;font-weight:700;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px}
+.pl-rule{background:rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;font-size:12px}
+.pl-stats{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;background:#f7f7f7;border-bottom:1px solid #ddd;min-height:38px}
+.chip{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid;font-weight:600}
+.chip.ok{background:#d4edda;border-color:#28a745;color:#155724}
+.chip.warn{background:#fff3cd;border-color:#f39c12;color:#856404}
+.chip.err{background:#f8d7da;border-color:#e74c3c;color:#721c24}
+.days-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;padding:14px}
+.day-card{border:1px solid #bbb;border-radius:6px;overflow:hidden}
+.day-card.bad{border-color:#e74c3c;box-shadow:0 0 0 2px rgba(231,76,60,.25)}
+.dc-head{background:#eee;text-align:center;padding:6px;font-size:12px;font-weight:700;border-bottom:1px solid #ccc;color:#111}
+.dc-body{padding:8px}
+.dc-body select{width:100%;margin-bottom:5px;font-family:‘Cairo’;font-size:12px;padding:5px 4px;border:1px solid #bbb;border-radius:4px;color:#111;background:#fff;outline:none}
+.dc-body select.sw{border-color:#f39c12;background:#fff8e1}
+.dc-body select.se{border-color:#e74c3c;background:#ffeaea}
+.mv-span{display:none;font-size:11px;font-weight:700;margin-bottom:4px;color:#111;border-bottom:1px solid #eee;padding-bottom:3px}
+.err-line{color:#e74c3c;font-size:11px;display:none;margin-top:2px;line-height:1.4}
+.err-line.show{display:block}
+
+/* TERMS */
+.terms{margin:16px 0;border-top:2px solid #111;padding-top:14px}
+.t-title{font-weight:900;font-size:15px;margin-bottom:10px;color:#111}
+.t-list{font-size:12px;line-height:1.7;list-style:none}
+.t-list li{margin-bottom:6px;padding-right:16px;position:relative;color:#222}
+.t-list li::before{content:”•”;position:absolute;right:0;font-weight:900}
+.agree-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;cursor:pointer;font-weight:700;font-size:14px;color:#111;user-select:none}
+.sig-box{display:flex;justify-content:space-between;align-items:flex-end;padding:14px;background:#fafafa;border:1px dashed #aaa}
+.sig-lbl{font-size:13px;font-weight:700;color:#111}
+.sig-clear{font-size:11px;color:#999;cursor:pointer;text-align:center;margin-top:4px}
+canvas{border-bottom:2px solid #111;display:block;background:#fff;cursor:crosshair}
+
+/* SUBMIT */
+.btn-sub{background:#F5C800;color:#111;border:2px solid #111;font-size:17px;font-weight:900;padding:15px;cursor:pointer;width:100%;font-family:‘Cairo’;margin-top:12px;display:block}
+.btn-sub:hover{background:#e0b600}
+
+/* SUCCESS */
+.success{display:none;padding:30px 20px;text-align:center}
+.success-btns{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.btn-dl{background:#2ecc71;color:#fff;border:2px solid #111;font-size:16px;font-weight:900;padding:13px 20px;cursor:pointer;font-family:‘Cairo’;width:100%}
+.btn-inv{background:#F5C800;color:#111;border:2px solid #111;font-size:16px;font-weight:900;padding:13px 20px;cursor:pointer;font-family:‘Cairo’;width:100%}
+.wa-link{display:block;margin-top:16px;color:#25d366;font-weight:700;font-size:16px;text-decoration:none}
+
+/* BRANCH PLANNER */
+.branch-planner{display:none;border:2px solid #111;margin-bottom:18px}
+.branch-planner.show{display:block}
+.bp-head{background:#111;color:#F5C800;padding:10px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.bp-notice{background:#fffbe6;border-bottom:2px solid #F5C800;padding:10px 14px;font-size:12px;font-weight:600;color:#7a5c00;text-align:center}
+.bp-days-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:14px}
+.bp-day-card{border:1px solid #bbb;border-radius:6px;overflow:hidden}
+.bp-dc-head{background:#F5C800;text-align:center;padding:6px;font-size:12px;font-weight:700;border-bottom:1px solid #ccc;color:#111}
+.bp-dc-body{padding:8px}
+.bp-meal-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px;font-weight:600;color:#111}
+.bp-meal-row:last-child{margin-bottom:0}
+.bp-meal-num{width:20px;height:20px;border-radius:50%;background:#111;color:#F5C800;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bp-meal-name{flex:1;font-size:12px}
+
+/* ══════════════════════════════════════════
+INVOICE STYLES
+══════════════════════════════════════════ */
+#invoicePage{display:none;max-width:900px;margin:20px auto;direction:rtl;font-family:‘Cairo’,sans-serif}
+
+.inv-wrap{background:#fff;border:3px solid #111;overflow:hidden}
+
+/* Invoice Header */
+.inv-header{background:#111;padding:0;display:flex;align-items:stretch;min-height:110px}
+.inv-logo-side{background:#F5C800;padding:20px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:160px}
+.inv-logo-text{font-size:28px;font-weight:900;letter-spacing:3px;color:#111;line-height:1}
+.inv-logo-leaf{font-size:18px;margin-bottom:4px}
+.inv-logo-sub{font-size:9px;font-weight:700;color:#111;letter-spacing:1px;margin-top:4px;opacity:.7}
+.inv-title-side{flex:1;padding:20px 28px;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}
+.inv-title-ar{font-size:26px;font-weight:900;color:#F5C800;letter-spacing:1px}
+.inv-title-en{font-size:11px;color:rgba(245,200,0,.6);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+.inv-num-badge{background:rgba(245,200,0,.15);border:1px solid rgba(245,200,0,.3);border-radius:6px;padding:6px 14px;margin-top:10px;color:#F5C800;font-size:12px;font-weight:700}
+
+/* Yellow stripe */
+.inv-stripe{background:#F5C800;height:6px}
+
+/* Info section */
+.inv-info-row{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:2px solid #111}
+.inv-info-block{padding:16px 20px}
+.inv-info-block:first-child{border-left:2px solid #111}
+.inv-info-title{font-size:10px;font-weight:700;color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px}
+.inv-info-row-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px}
+.inv-info-label{color:#666;font-weight:600}
+.inv-info-val{font-weight:700;color:#111}
+
+/* Items table */
+.inv-table-wrap{padding:0}
+.inv-table{width:100%;border-collapse:collapse;font-size:13px}
+.inv-table th{background:#111;color:#F5C800;padding:10px 16px;font-weight:700;font-size:12px;text-align:right}
+.inv-table td{padding:11px 16px;border-bottom:1px solid #eee;color:#111;font-weight:600}
+.inv-table tr:last-child td{border-bottom:none}
+.inv-table tr:nth-child(even) td{background:#fafafa}
+.inv-table .item-num{background:#F5C800;color:#111;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.inv-qty{text-align:center}
+.inv-price{text-align:left;color:#2e7d32;font-weight:900}
+
+/* Total bar */
+.inv-total-section{background:#111;padding:0;display:flex;justify-content:flex-end;align-items:stretch}
+.inv-total-inner{display:flex;align-items:center;gap:30px;padding:16px 28px}
+.inv-subtotal-col{text-align:left}
+.inv-subtotal-label{font-size:11px;color:rgba(255,255,255,.6);font-weight:600}
+.inv-subtotal-val{font-size:16px;font-weight:900;color:#fff}
+.inv-total-divider{width:2px;height:50px;background:rgba(245,200,0,.4)}
+.inv-total-col{text-align:left}
+.inv-total-label{font-size:12px;color:#F5C800;font-weight:700;letter-spacing:1px}
+.inv-total-val{font-size:32px;font-weight:900;color:#F5C800;line-height:1}
+.inv-total-currency{font-size:14px;color:rgba(245,200,0,.7);margin-top:2px}
+
+/* Payment section */
+.inv-payment{background:#fffbe6;border-top:3px solid #F5C800;padding:16px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.inv-pay-icon{font-size:28px}
+.inv-pay-info{flex:1}
+.inv-pay-title{font-size:12px;font-weight:900;color:#7a5c00;margin-bottom:6px}
+.inv-pay-detail{font-size:11px;color:#7a5c00;font-weight:600;line-height:1.8}
+.inv-pay-iban{font-family:monospace;font-size:13px;font-weight:900;color:#111;background:#fff;border:1px solid #ddd;padding:4px 10px;border-radius:4px;display:inline-block;margin-top:4px;letter-spacing:1px}
+.inv-pay-note{font-size:11px;color:#e74c3c;font-weight:700;margin-top:6px}
+
+/* Footer */
+.inv-footer{background:#f5f5f5;border-top:2px solid #111;padding:12px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.inv-footer-brand{font-size:13px;font-weight:900;color:#111}
+.inv-footer-brand span{color:#2e7d32}
+.inv-footer-contact{font-size:11px;color:#666;font-weight:600}
+.inv-footer-stamp{background:#2e7d32;color:#fff;font-size:10px;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:1px}
+
+/* Watermark */
+.inv-watermark{text-align:center;padding:10px;opacity:.08;font-size:60px;font-weight:900;color:#111;letter-spacing:8px;pointer-events:none;user-select:none;line-height:1}
+
+/* Invoice action btns */
+.inv-actions{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
+.inv-btn{flex:1;padding:13px;border:2px solid #111;font-family:‘Cairo’;font-size:15px;font-weight:900;cursor:pointer;min-width:140px}
+.inv-btn-dl{background:#F5C800;color:#111}
+.inv-btn-back{background:#fff;color:#111}
+.inv-btn-wa{background:#25d366;color:#fff;border-color:#25d366}
+
+/* PRINT / CAPTURE HIDE */
+.cap-hide{display:block}
+body.cap .cap-hide{display:none!important}
+body.cap input,body.cap select,body.cap .btn-sub,body.cap .pl-stats,body.cap .err-line,body.cap .pl-rule{display:none!important}
+body.cap .vspan,body.cap .mv-span,body.cap .vspan-sd,body.cap .vspan-st{display:block!important}
+body.cap .sameday-badge{display:inline-block!important}
+body.cap .sameday-opts{display:none!important}
+body.cap .subtype-grid{display:none!important}
+body.cap .gym-branch-opts{display:none!important}
+
+@media(max-width:680px){
+.sel-grid{grid-template-columns:1fr 1fr}
+.info-grid{grid-template-columns:1fr}
+.info-cell.full{grid-column:span 1;border-top:2px solid #111}
+.sameday-cell{grid-column:span 1}
+.info-cell{border-left:none;border-bottom:1px solid #ccc}
+.inv-header{flex-direction:column}
+.inv-logo-side{min-width:unset;width:100%}
+.inv-info-row{grid-template-columns:1fr}
+.inv-info-block:first-child{border-left:none;border-bottom:2px solid #111}
+.inv-total-inner{flex-wrap:wrap;gap:14px}
+.inv-table th,.inv-table td{padding:8px 10px;font-size:11px}
+}
+</style>
+
+</head>
+<body>
+
+<div class="page" id="mainPage">
+
+  <div class="hdr">
+    <div class="logo">NEOTR<span>🌿</span>SH</div>
+    <div class="hdr-sub">استمارة طلب اشتراك</div>
+  </div>
+
+  <div class="fb" id="formBody">
+
+<div class="info-grid">
+  <div class="info-cell">
+    <label>الاسم:</label>
+    <input type="text" id="fName" placeholder="الاسم الثلاثي">
+    <span class="vspan" id="vName"></span>
+  </div>
+  <div class="info-cell">
+    <label>الجوال:</label>
+    <input type="tel" id="fPhone" placeholder="05xxxxxxxx">
+    <span class="vspan" id="vPhone"></span>
+  </div>
+  <div class="info-cell full">
+    <label>تاريخ بداية الاشتراك:</label>
+    <input type="date" id="fDate">
+    <span class="vspan" id="vDate"></span>
+  </div>
+  <div class="info-cell sameday-cell cap-hide">
+    <span class="sameday-label">🍱 استلام وجبة في نفس يوم الاشتراك (اليوم الأول):</span>
+    <div class="sameday-opts">
+      <div class="sd-opt" onclick="pickSameDay('yes')"><div class="chk" id="sd-yes"></div>نعم، أستلم اليوم</div>
+      <div class="sd-opt" onclick="pickSameDay('no')"><div class="chk" id="sd-no"></div>لا، من الغد</div>
+      <div class="sd-opt" onclick="pickSameDay('date')"><div class="chk" id="sd-date"></div>أستلم في تاريخ الاشتراك</div>
+    </div>
+  </div>
+  <div class="info-cell sameday-cell" style="display:none" id="sdCapRow">
+    <span class="sameday-label">🍱 استلام اليوم الأول:</span>
+    <span class="sameday-badge" id="sdBadge"></span>
+    <span class="vspan-sd" id="vSameDay"></span>
+  </div>
+</div>
+
+<div class="subtype-bar">
+  <div class="subtype-bar-head">📍 نوع الاشتراك</div>
+  <div class="subtype-bar-opts cap-hide">
+    <div class="st-pill" id="st-restaurant" onclick="pickSubType('restaurant')">
+      <div class="st-pill-dot"></div>
+      <span class="st-pill-ico">🏪</span> استلام المطعم
+    </div>
+    <div class="st-pill" id="st-delivery" onclick="pickSubType('delivery')">
+      <div class="st-pill-dot"></div>
+      <span class="st-pill-ico">🚗</span> توصيل
+    </div>
+    <div class="st-pill" id="st-gym" onclick="pickSubType('gym')">
+      <div class="st-pill-dot"></div>
+      <span class="st-pill-ico">💪</span> جولدز جيم
+    </div>
+  </div>
+  <div class="loc-row cap-hide" id="locRow">
+    <div class="loc-step">📍 الخطوة 1: افتح الخرائط وشارك موقعك</div>
+    <div class="loc-actions">
+      <a class="loc-open-btn" id="locOpenBtn" href="https://maps.google.com" target="_blank" onclick="openMapsFlow()">
+        🗺️ افتح خرائط جوجل
+      </a>
+      <div class="loc-spinner" id="locSpinner"></div>
+    </div>
+    <div class="loc-step" id="locStep2" style="display:none">📋 الخطوة 2: انسخ رابط موقعك والصقه هنا</div>
+    <div class="loc-paste-wrap" id="locPasteWrap" style="display:none">
+      <input class="loc-paste-input" id="locInput" type="url" 
+        placeholder="الصق رابط الموقع هنا... (maps.google.com/...)"
+        oninput="onLocInput(this.value)"
+        dir="ltr">
+      <button class="loc-paste-btn" onclick="pasteFromClipboard()">📋 لصق</button>
+    </div>
+    <div class="loc-confirm" id="locConfirm">✅ تم تسجيل موقع التوصيل بنجاح</div>
+  </div>
+  <div class="vspan-st" id="vSubType"></div>
+</div>
+
+<div class="sel-grid">
+  <div class="sg-col">
+    <div class="sg-head">الباقة</div>
+    <div class="sg-body">
+      <div class="opt-row" onclick="pickPkg('chi')"><div class="chk" id="pk-chi"></div>باقة الدجاج</div>
+      <div class="opt-row" onclick="pickPkg('mix')"><div class="chk" id="pk-mix"></div>الباقة المنوعة</div>
+    </div>
+  </div>
+  <div class="sg-col">
+    <div class="sg-head">الوجبات يومياً</div>
+    <div class="sg-body">
+      <div class="opt-row" onclick="pickCount(1)"><div class="chk" id="ct-1"></div>وجبة</div>
+      <div class="opt-row" onclick="pickCount(2)"><div class="chk" id="ct-2"></div>وجبتان</div>
+      <div class="opt-row" onclick="pickCount(3)"><div class="chk" id="ct-3"></div>3 وجبات</div>
+      <div class="opt-row" onclick="pickCount(4)"><div class="chk" id="ct-4"></div>4 وجبات</div>
+    </div>
+  </div>
+  <div class="sg-col">
+    <div class="sg-head">المدة</div>
+    <div class="sg-body">
+      <div class="opt-row" onclick="pickPeriod('12')"><div class="chk" id="pr-12"></div>12 يوم</div>
+      <div class="opt-row" onclick="pickPeriod('24')"><div class="chk" id="pr-24"></div>24 يوم</div>
+    </div>
+  </div>
+  <div class="sg-col">
+    <div class="sg-head">الإضافات</div>
+    <div class="sg-body">
+      <div class="opt-row" onclick="togAdd('salad')"><div class="chk" id="ad-salad"></div>سلطة</div>
+      <div class="opt-row" onclick="togAdd('juice')"><div class="chk" id="ad-juice"></div>عصير</div>
+      <div class="opt-row" onclick="togAdd('sandwich')"><div class="chk" id="ad-sandwich"></div>ساندوتش</div>
+      <div class="opt-row" id="row-xchi" onclick="togAdd('xchi')"><div class="chk" id="ad-xchi"></div>+50جم دجاج</div>
+      <div class="opt-row" id="row-xmix" onclick="togAdd('xmix')"><div class="chk" id="ad-xmix"></div>+50جم منوع</div>
+    </div>
+  </div>
+</div>
+
+<div class="price-bar">الإجمالي: <span id="totalPr">0</span> ريال</div>
+
+<div class="mc-grid">
+  <div class="mc-opt" onclick="pickChoice('self')"><div class="chk" id="mc-self"></div>أختار وجباتي بنفسي</div>
+  <div class="mc-opt" onclick="pickChoice('branch')"><div class="chk" id="mc-branch"></div>الفرع يختار لي</div>
+</div>
+
+<div class="planner" id="plannerDiv">
+  <div class="pl-head">
+    <span>📅 جدول الوجبات</span>
+    <span class="pl-rule cap-hide" id="ruleNote">—</span>
+  </div>
+  <div class="pl-stats cap-hide" id="statsBar"><span style="color:#999;font-size:12px">ابدأ بالاختيار...</span></div>
+  <div class="days-wrap" id="daysWrap"></div>
+</div>
+
+<div class="branch-planner" id="branchPlannerDiv">
+  <div class="bp-head"><span>📋 جدول الوجبات المختار من الفرع</span></div>
+  <div class="bp-notice">✅ تم تحديد وجباتك من قبل الفرع وفقاً للباقة المختارة</div>
+  <div class="bp-days-wrap" id="branchDaysWrap"></div>
+</div>
+
+<div class="terms">
+  <div class="t-title">** الشروط والأحكام شاملة لجميع باقات الاستلام:</div>
+  <ul class="t-list">
+    <li>1. تُدفع قيمة الاشتراك بناءً على سعر الباقة المختارة من قبل العميل مقدماً.</li>
+    <li>2. يتوجب على العميل تزويدنا بكافة المعلومات الأساسية مثل الاسم الكامل ورقم الجوال لتتم خدمته على أكمل وجه.</li>
+    <li>3. تُسلم الوجبات للمشترك خلال أوقات عمل الفرع 12م - 12م عدا يوم الجمعة 1م - 12 م.</li>
+    <li>4. لا يحق للعميل المطالبة باستلام وجبات يوم سابق أو يوم قادم في نفس اليوم.</li>
+    <li>5. يحق للعميل طلب تأجيل يوم أو مجموعة أيام خلال فترة الاشتراك وذالك بالتنسيق مع أخصائي المشتركين عبر واتساب.</li>
+    <li>6. في حال حدوث ظرف خارج عن السيطرة مثل: الأوبئة، الزلازل الانفجارات، عمل اجرامي، أو أي أسباب أخرى تخرج عن سيطرتنا يكون لنا الحق تغيير، تعليق أو إنهاء الخدمة المقدمة.</li>
+    <li>7. في حال رغبة المشترك إلغاء الباقه المشترك بها ويكون ذلك خلال الأيام الثلاثة الأولى من الاشتراك وبناء عليه سيتم خصم 25% من اجمالي المبلغ المدفوع عن الباقة، بالاضافة الى خصم قيمة التوصيل والايام المستنفذة من الاشتراك علماً أن مدة استرجاع المبلغ للعميل من 3-5 أيام.</li>
+    <li>8. في حال وجود شكوى أو مقترح على المنتج أو الخدمة لا تتردد في التواصل معنا على الواتساب.</li>
+    <li>9. في الباقات (المتنوعة/الدجاج) يسمح للعميل بتكرار صنف محدد (6 مرات لإشتراك الـ 4 اسابيع) و (3 مرات لإشتراك الـ 2 اسبوع) فقط.</li>
+    <li>10. في باقات (الساندوتش/السناكات/العصائر) يسمح للعميل بتكرار صنف محدد (6 مرات لإشتراك الـ 4 اسابيع) و (3 مرات لإشتراك الـ 2 اسبوع) فقط.</li>
+    <li>11. يسمح بالتأجيل 7 أيام فقط لمشتركي مدة 4 اسابيع و 4 أيام فقط لمشتركي مدة 2 اسبوع.</li>
+    <li>12. في حال عدم إستلام الوجبة مع عدم إرسال وإخطار خدمة العملاء للتأجيل تلغى الوجبة ولا يحق للعميل المطالبة بها في يوم آخر.</li>
+    <li>13. في حال رغبة العميل باستلام وجبته في نفس يوم الاشتراك (اليوم الأول) يجب الإشارة إلى ذلك في الاستمارة، ويُعدّ ذلك تأكيداً رسمياً بالاستلام ضمن أوقات عمل الفرع في اليوم ذاته.</li>
+  </ul>
+
+  <div class="agree-row" onclick="togPolicy()">
+    <div class="chk" id="ag-chk"></div>
+    <span>أقر بأنني قرأت ووافقت على السياسات والأحكام</span>
+  </div>
+
+  <div class="sig-box">
+    <div><div class="sig-lbl">التوقيع:</div><small style="color:#999">signature</small></div>
+    <div>
+      <canvas id="sigCanvas" width="280" height="80"></canvas>
+      <div class="sig-clear cap-hide" onclick="if(SP)SP.clear()">مسح التوقيع</div>
+    </div>
+  </div>
+</div>
+
+<button class="btn-sub cap-hide" onclick="doSubmit()">إرسال الطلب وحفظ الاستمارة</button>
+
+  </div><!-- end formBody -->
+
+  <div class="success" id="successDiv">
+
+```
+<!-- ✅ Header -->
+<div style="background:#2ecc71;margin:-30px -20px 0;padding:24px 20px 20px;border-bottom:3px solid #27ae60">
+  <div style="font-size:36px;margin-bottom:6px">✅</div>
+  <h2 style="color:#fff;font-size:20px;font-weight:900">تم حفظ الاستمارة بنجاح!</h2>
+</div>
+
+<!-- 🔴 WhatsApp CTA — PRIMARY -->
+<div style="background:#fff;border:3px solid #25d366;border-radius:12px;margin:18px 0 10px;padding:16px;text-align:center">
+  <div style="font-size:13px;font-weight:700;color:#e74c3c;margin-bottom:4px">⚠️ خطوة مهمة — لا يكتمل الاشتراك بدونها</div>
+  <div style="font-size:12px;color:#555;margin-bottom:12px;line-height:1.6">
+    أرسل تفاصيل اشتراكك على واتساب الآن<br>لتأكيد الطلب وتفعيل الاشتراك
+  </div>
+  <a id="waLink" href="#" target="_blank"
+    style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25d366;color:#fff;font-size:17px;font-weight:900;padding:16px;border-radius:8px;text-decoration:none;font-family:'Cairo'">
+    <span style="font-size:22px">📲</span>
+    أرسل تفاصيل الاشتراك على واتساب
+  </a>
+  <div style="font-size:11px;color:#27ae60;font-weight:700;margin-top:8px">📌 سيتم إرسال كافة تفاصيل طلبك تلقائياً</div>
+</div>
+
+<!-- Divider -->
+<div style="display:flex;align-items:center;gap:8px;margin:14px 0;color:#bbb;font-size:12px">
+  <div style="flex:1;height:1px;background:#eee"></div>
+  ثم بعد ذلك
+  <div style="flex:1;height:1px;background:#eee"></div>
+</div>
+
+<!-- Secondary actions -->
+<div class="success-btns" style="gap:8px">
+  <button class="btn-dl" onclick="doDownload()" style="font-size:14px;padding:12px">
+    ⬇️ تحميل الاستمارة كصورة
+  </button>
+  <button class="btn-inv" onclick="showInvoice()" style="font-size:14px;padding:12px">
+    🧾 عرض الفاتورة وتحميلها
+  </button>
+</div>
+```
+
+  </div>
+
+</div><!-- end mainPage -->
+
+<!-- ═══════════════════════════════════════════
+     INVOICE PAGE
+═══════════════════════════════════════════ -->
+
+<div id="invoicePage">
+  <div class="inv-actions cap-hide">
+    <button class="inv-btn inv-btn-back" onclick="hideInvoice()">← العودة للاستمارة</button>
+    <button class="inv-btn inv-btn-dl" onclick="downloadInvoice()">⬇️ تحميل الفاتورة</button>
+    <a id="waInvLink" href="#" target="_blank" class="inv-btn inv-btn-wa" style="text-decoration:none;display:flex;align-items:center;justify-content:center">📲 إرسال عبر واتساب</a>
+  </div>
+
+  <div class="inv-wrap" id="invoiceWrap">
+
+```
+<!-- Invoice Header -->
+<div class="inv-header">
+  <div class="inv-logo-side">
+    <div class="inv-logo-leaf">🌿</div>
+    <div class="inv-logo-text">NEOTRISH</div>
+    <div class="inv-logo-sub">NUTRITION • HEALTH</div>
+  </div>
+  <div class="inv-title-side">
+    <div class="inv-title-ar">فاتورة اشتراك</div>
+    <div class="inv-title-en">SUBSCRIPTION INVOICE</div>
+    <div class="inv-num-badge" id="invNumBadge">رقم: #NTSH-0001</div>
+  </div>
+</div>
+
+<div class="inv-stripe"></div>
+
+<!-- Client & Sub Info -->
+<div class="inv-info-row">
+  <div class="inv-info-block">
+    <div class="inv-info-title">بيانات العميل</div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">الاسم</span>
+      <span class="inv-info-val" id="invName">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">الجوال</span>
+      <span class="inv-info-val" id="invPhone">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">تاريخ الاشتراك</span>
+      <span class="inv-info-val" id="invDate">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">نوع الاشتراك</span>
+      <span class="inv-info-val" id="invSubType">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">استلام اليوم الأول</span>
+      <span class="inv-info-val" id="invSameDay">—</span>
+    </div>
+  </div>
+  <div class="inv-info-block">
+    <div class="inv-info-title">تفاصيل الباقة</div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">نوع الباقة</span>
+      <span class="inv-info-val" id="invPkg">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">الوجبات يومياً</span>
+      <span class="inv-info-val" id="invCnt">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">مدة الاشتراك</span>
+      <span class="inv-info-val" id="invPer">—</span>
+    </div>
+    <div class="inv-info-row-item">
+      <span class="inv-info-label">تاريخ الفاتورة</span>
+      <span class="inv-info-val" id="invIssueDate">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- Items Table -->
+<div class="inv-table-wrap">
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th style="width:40px">#</th>
+        <th>البند</th>
+        <th class="inv-qty">الكمية</th>
+        <th class="inv-price">السعر (ريال)</th>
+      </tr>
+    </thead>
+    <tbody id="invTableBody">
+    </tbody>
+  </table>
+</div>
+
+<!-- Total -->
+<div class="inv-total-section">
+  <div class="inv-total-inner">
+    <div class="inv-subtotal-col">
+      <div class="inv-subtotal-label">إجمالي البنود</div>
+      <div class="inv-subtotal-val" id="invSubtotal">0 ريال</div>
+    </div>
+    <div class="inv-total-divider"></div>
+    <div class="inv-total-col">
+      <div class="inv-total-label">المبلغ الإجمالي المستحق</div>
+      <div class="inv-total-val" id="invTotal">0</div>
+      <div class="inv-total-currency">ريال سعودي (SAR)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Info -->
+<div class="inv-payment">
+  <div class="inv-pay-icon">🏦</div>
+  <div class="inv-pay-info">
+    <div class="inv-pay-title">معلومات الدفع — مصرف الراجحي</div>
+    <div class="inv-pay-detail">
+      رقم الحساب: <strong>5320001 0006086147230</strong><br>
+      <span class="inv-pay-iban">SA2680000532608016147230</span>
+    </div>
+    <div class="inv-pay-note">* يرجى إرفاق صورة الحوالة بعد التحويل</div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="inv-footer">
+  <div class="inv-footer-brand">NEOTR<span>🌿</span>SH</div>
+  <div class="inv-footer-contact">📞 واتساب: 966570099700+</div>
+  <div class="inv-footer-stamp">✅ فاتورة رسمية معتمدة</div>
+</div>
+
+<div class="inv-watermark">NEOTRISH</div>
+```
+
+  </div><!-- end inv-wrap -->
+</div><!-- end invoicePage -->
+
+<script>
+// ── SAFARI/iOS CHROME REDIRECT ──
+(function(){
+  var isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+  if(isSafari&&isIOS){
+    var currentUrl=window.location.href.replace("https://","").replace("http://","");
+    var notice=document.createElement('div');
+    notice.style="background:#111;color:#F5C800;padding:12px;text-align:center;font-size:13px;font-weight:bold;border-bottom:3px solid #2e7d32;position:sticky;top:0;z-index:9999;font-family:'Cairo',sans-serif;";
+    notice.innerHTML="لأفضل أداء، يرجى استخدام متصفح كروم. <a href='googlechromes://"+currentUrl+"' style='color:#fff;text-decoration:underline;margin-right:10px;'>اضغط هنا للفتح في Chrome</a>";
+    document.body.prepend(notice);
+  }
+})();
+
+// ── BRANCH SCHEDULES ──
+const BRANCH_SCHEDULES={
+  chi:{
+    '12':{
+      1:[{1:'دجاج مشوي'},{1:'دجاج زعفران'},{1:'دجاج ملوخية'},{1:'دجاج ليمون'},{1:'كفتة دجاج'},{1:'دجاج مكسيكي'},{1:'دجاج سريراتشا'},{1:'باستا دجاج'},{1:'دجاج مشوي'},{1:'دجاج زعفران'},{1:'دجاج ملوخية'},{1:'دجاج ليمون'}],
+      2:[{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'}],
+      3:[{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية'},{1:'دجاج ليمون',2:'كفتة دجاج',3:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج',3:'دجاج مشوي'},{1:'دجاج زعفران',2:'دجاج ملوخية',3:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا'},{1:'باستا دجاج',2:'دجاج مشوي',3:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون',3:'كفتة دجاج'},{1:'دجاج مكسيكي',2:'دجاج سريراتشا',3:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية'},{1:'دجاج ليمون',2:'كفتة دجاج',3:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج',3:'دجاج مشوي'},{1:'دجاج زعفران',2:'دجاج ملوخية',3:'دجاج ليمون'}],
+      4:[{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'}]
+    },
+    '24':{
+      1:[{1:'دجاج مشوي'},{1:'دجاج زعفران'},{1:'دجاج ملوخية'},{1:'دجاج ليمون'},{1:'كفتة دجاج'},{1:'دجاج مكسيكي'},{1:'دجاج سريراتشا'},{1:'باستا دجاج'},{1:'دجاج مشوي'},{1:'دجاج زعفران'},{1:'دجاج ملوخية'},{1:'دجاج ليمون'},{1:'كفتة دجاج'},{1:'دجاج مكسيكي'},{1:'دجاج سريراتشا'},{1:'باستا دجاج'},{1:'دجاج مشوي'},{1:'دجاج زعفران'},{1:'دجاج ملوخية'},{1:'دجاج ليمون'},{1:'كفتة دجاج'},{1:'دجاج مكسيكي'},{1:'دجاج سريراتشا'},{1:'باستا دجاج'}],
+      2:[{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج'}],
+      3:[{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية'},{1:'دجاج ليمون',2:'كفتة دجاج',3:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج',3:'دجاج مشوي'},{1:'دجاج زعفران',2:'دجاج ملوخية',3:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا'},{1:'باستا دجاج',2:'دجاج مشوي',3:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون',3:'كفتة دجاج'},{1:'دجاج مكسيكي',2:'دجاج سريراتشا',3:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية'},{1:'دجاج ليمون',2:'كفتة دجاج',3:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج',3:'دجاج مشوي'},{1:'دجاج زعفران',2:'دجاج ملوخية',3:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا'},{1:'باستا دجاج',2:'دجاج مشوي',3:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون',3:'كفتة دجاج'},{1:'دجاج مكسيكي',2:'دجاج سريراتشا',3:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية'},{1:'دجاج ليمون',2:'كفتة دجاج',3:'دجاج مكسيكي'},{1:'دجاج سريراتشا',2:'باستا دجاج',3:'دجاج مشوي'},{1:'دجاج زعفران',2:'دجاج ملوخية',3:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا'},{1:'باستا دجاج',2:'دجاج مشوي',3:'دجاج زعفران'},{1:'دجاج ملوخية',2:'دجاج ليمون',3:'كفتة دجاج'},{1:'دجاج مكسيكي',2:'دجاج سريراتشا',3:'باستا دجاج'}],
+      4:[{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'},{1:'دجاج مشوي',2:'دجاج زعفران',3:'دجاج ملوخية',4:'دجاج ليمون'},{1:'كفتة دجاج',2:'دجاج مكسيكي',3:'دجاج سريراتشا',4:'باستا دجاج'}]
+    }
+  },
+  mix:{
+    '12':{
+      1:[{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'},{1:'تشيلي بيف'},{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'},{1:'تشيلي بيف'},{1:'سالمون'},{1:'سمك فيليه'}],
+      2:[{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'}],
+      3:[{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'}],
+      4:[{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم',4:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم',4:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'}]
+    },
+    '24':{
+      1:[{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'},{1:'تشيلي بيف'},{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'},{1:'تشيلي بيف'},{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'},{1:'تشيلي بيف'},{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'},{1:'تشيلي بيف'},{1:'سالمون'},{1:'سمك فيليه'},{1:'جمبري كيجن'},{1:'ستيك لحم'}],
+      2:[{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن'}],
+      3:[{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه'}],
+      4:[{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم',4:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم',4:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم',4:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'},{1:'سمك فيليه',2:'جمبري كيجن',3:'ستيك لحم',4:'تشيلي بيف'},{1:'سالمون',2:'سمك فيليه',3:'جمبري كيجن',4:'ستيك لحم'},{1:'تشيلي بيف',2:'سالمون',3:'سمك فيليه',4:'جمبري كيجن'},{1:'ستيك لحم',2:'تشيلي بيف',3:'سالمون',4:'سمك فيليه'},{1:'جمبري كيجن',2:'ستيك لحم',3:'تشيلي بيف',4:'سالمون'}]
+    }
+  }
+};
+
+let SP=null;
+let savedImg=null;
+let invCounter=Math.floor(Math.random()*8000)+1000;
+
+function initApp(){
+  SP=new SignaturePad(document.getElementById('sigCanvas'));
+  const d=document.getElementById('fDate');
+  const t=new Date().toISOString().split('T')[0];
+  d.min=t; d.value=t;
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  setTimeout(initApp, 100);
+}
+
+const PRICE={
+  chi:{'12':{1:294,2:588,3:846,4:1104},'24':{1:540,2:1060,3:1570,4:1996}},
+  mix:{'12':{1:414,2:816,3:1206,4:1584},'24':{1:754,2:1497,3:2232,4:2952}}
+};
+const ADDON_P={
+  '12':{salad:140,juice:140,sandwich:183,xchi:72,xmix:108},
+  '24':{salad:240,juice:240,sandwich:345,xchi:144,xmix:216}
+};
+const ADDON_N={salad:'سلطة',juice:'عصير',sandwich:'ساندوتش',xchi:'+50 جم دجاج إضافي',xmix:'+50 جم منوع إضافي'};
+const MEALS={
+  chi:['دجاج مشوي','دجاج زعفران','دجاج ملوخية','دجاج ليمون','كفتة دجاج','دجاج مكسيكي','دجاج سريراتشا','باستا دجاج'],
+  mix:['سالمون','سمك فيليه','جمبري كيجن','ستيك لحم','تشيلي بيف']
+};
+const PKG_N={chi:8,mix:5};
+const S={pkg:'',cnt:0,per:'',adds:[],choice:'',plan:{},agreed:false,sameDay:'',subType:'',gymBranch:''};
+
+function setChk(id,on){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(on){el.classList.add('on');el.textContent='✓';}
+  else{el.classList.remove('on');el.textContent='';}
+}
+function clearGroup(prefix){
+  document.querySelectorAll('[id^="'+prefix+'"]').forEach(function(el){el.classList.remove('on');el.textContent='';});
+}
+
+function pickSameDay(v){
+  S.sameDay=v;
+  setChk('sd-yes',v==='yes'); setChk('sd-no',v==='no'); setChk('sd-date',v==='date');
+  var badge=document.getElementById('sdBadge');
+  var vsd=document.getElementById('vSameDay');
+  var txt='';
+  if(v==='yes') txt='✅ نعم، يستلم في يوم الاشتراك (اليوم)';
+  else if(v==='no') txt='❌ لا، يبدأ الاستلام من اليوم التالي';
+  else if(v==='date'){var dateVal=document.getElementById('fDate').value; txt='📅 يستلم في تاريخ الاشتراك: '+(dateVal||'—');}
+  badge.textContent=txt; vsd.textContent=txt;
+}
+
+function updateAddonVisibility(){
+  var rowXchi=document.getElementById('row-xchi');
+  var rowXmix=document.getElementById('row-xmix');
+  if(S.pkg==='chi'){
+    rowXchi.classList.remove('hidden'); rowXmix.classList.add('hidden');
+    var i=S.adds.indexOf('xmix'); if(i>-1){S.adds.splice(i,1);setChk('ad-xmix',false);}
+  } else if(S.pkg==='mix'){
+    rowXmix.classList.remove('hidden'); rowXchi.classList.add('hidden');
+    var j=S.adds.indexOf('xchi'); if(j>-1){S.adds.splice(j,1);setChk('ad-xchi',false);}
+  } else {
+    rowXchi.classList.remove('hidden'); rowXmix.classList.remove('hidden');
+  }
+}
+
+function pickPkg(p){S.pkg=p;clearGroup('pk-');setChk('pk-'+p,true);updateAddonVisibility();calcPrice();refreshPlanner();refreshBranchPlanner();}
+function pickCount(n){S.cnt=n;clearGroup('ct-');setChk('ct-'+n,true);calcPrice();refreshPlanner();refreshBranchPlanner();}
+function pickPeriod(p){S.per=p;clearGroup('pr-');setChk('pr-'+p,true);calcPrice();refreshPlanner();refreshBranchPlanner();}
+function togAdd(a){var i=S.adds.indexOf(a);if(i>-1)S.adds.splice(i,1);else S.adds.push(a);setChk('ad-'+a,S.adds.includes(a));calcPrice();}
+function pickChoice(c){S.choice=c;clearGroup('mc-');setChk('mc-'+c,true);refreshPlanner();refreshBranchPlanner();}
+function togPolicy(){S.agreed=!S.agreed;setChk('ag-chk',S.agreed);}
+
+// ── SUB TYPE ──
+function pickSubType(t){
+  S.subType=t; S.gymBranch='';
+  ['restaurant','delivery','gym'].forEach(function(x){
+    var el=document.getElementById('st-'+x);
+    if(!el) return;
+    if(x===t) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+  var locRow=document.getElementById('locRow');
+  if(t==='delivery') locRow.classList.add('show');
+  else locRow.classList.remove('show');
+  calcPrice();
+  updateSubTypeLabel();
+}
+
+function getLocation(){}
+
+function openMapsFlow(){
+  var step2=document.getElementById('locStep2');
+  var pasteWrap=document.getElementById('locPasteWrap');
+  var spinner=document.getElementById('locSpinner');
+  var openBtn=document.getElementById('locOpenBtn');
+
+  spinner.style.display='block';
+
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(pos){
+      spinner.style.display='none';
+      userLat=pos.coords.latitude.toFixed(6);
+      userLng=pos.coords.longitude.toFixed(6);
+      var url='https://maps.google.com/?q='+userLat+','+userLng;
+      userLocText=url;
+      var inp=document.getElementById('locInput');
+      inp.value=url;
+      inp.classList.add('filled');
+      step2.style.display='block';
+      pasteWrap.style.display='flex';
+      document.getElementById('locConfirm').classList.add('show');
+      openBtn.textContent='✅ تم تحديد الموقع تلقائياً';
+      openBtn.style.background='#27ae60';
+      updateSubTypeLabel();
+    }, function(){
+      spinner.style.display='none';
+      step2.style.display='block';
+      pasteWrap.style.display='flex';
+      openBtn.innerHTML='🗺️ افتح الخرائط مجدداً';
+    },{enableHighAccuracy:true,timeout:8000});
+  } else {
+    spinner.style.display='none';
+    step2.style.display='block';
+    pasteWrap.style.display='flex';
+  }
+}
+
+function onLocInput(val){
+  val=val.trim();
+  var confirm=document.getElementById('locConfirm');
+  var inp=document.getElementById('locInput');
+  if(val.length>10 && (val.includes('maps') || val.includes('goo.gl') || val.includes('loc') || /\d+\.\d+/.test(val))){
+    userLocText=val;
+    userLat='set'; userLng='set';
+    inp.classList.add('filled');
+    confirm.classList.add('show');
+    updateSubTypeLabel();
+  } else {
+    userLocText=''; userLat=null; userLng=null;
+    inp.classList.remove('filled');
+    confirm.classList.remove('show');
+    updateSubTypeLabel();
+  }
+}
+
+async function pasteFromClipboard(){
+  try{
+    var text=await navigator.clipboard.readText();
+    var inp=document.getElementById('locInput');
+    inp.value=text;
+    onLocInput(text);
+  } catch(e){
+    document.getElementById('locInput').focus();
+  }
+}
+
+function updateSubTypeLabel(){
+  var el=document.getElementById('vSubType'); if(!el) return;
+  var icons={restaurant:'🏪',delivery:'🚗',gym:'💪'};
+  var names={restaurant:'استلام المطعم',delivery:'توصيل',gym:'فروع جولدز جيم'};
+  if(!S.subType){el.textContent=''; return;}
+  var txt=icons[S.subType]+' '+names[S.subType];
+  if(S.subType==='delivery'&&userLocText) txt+=' | الموقع: '+userLocText;
+  el.textContent=txt;
+}
+
+function pickGymBranch(b){ S.gymBranch=b; updateSubTypeLabel(); }
+
+var userLat=null, userLng=null, userLocText='';
+
+const DELIVERY_FEE={'12':120,'24':225};
+
+function deliveryFee(){
+  if(S.subType==='delivery'&&S.per) return DELIVERY_FEE[S.per]||0;
+  return 0;
+}
+
+function calcPrice(){
+  if(S.pkg&&S.per&&S.cnt){
+    let t=PRICE[S.pkg][S.per][S.cnt];
+    S.adds.forEach(function(a){if(ADDON_P[S.per][a])t+=ADDON_P[S.per][a];});
+    t+=deliveryFee();
+    document.getElementById('totalPr').textContent=t;
+  }
+}
+
+function getTotal(){
+  if(!S.pkg||!S.per||!S.cnt) return 0;
+  let t=PRICE[S.pkg][S.per][S.cnt];
+  S.adds.forEach(function(a){if(ADDON_P[S.per]&&ADDON_P[S.per][a])t+=ADDON_P[S.per][a];});
+  t+=deliveryFee();
+  return t;
+}
+
+function maxRep(){if(!S.pkg||!S.per||!S.cnt)return 0;return Math.ceil(parseInt(S.per)*S.cnt/PKG_N[S.pkg]);}
+
+function refreshPlanner(){
+  var pl=document.getElementById('plannerDiv');
+  if(S.choice==='self'&&S.cnt>0&&S.per&&S.pkg){pl.classList.add('show');buildPlanner();}
+  else pl.classList.remove('show');
+}
+
+function refreshBranchPlanner(){
+  var bp=document.getElementById('branchPlannerDiv');
+  if(S.choice==='branch'&&S.pkg&&S.per&&S.cnt){buildBranchPlanner();}
+  else bp.classList.remove('show');
+}
+
+function buildBranchPlanner(){
+  var bp=document.getElementById('branchPlannerDiv');
+  var wrap=document.getElementById('branchDaysWrap');
+  if(!S.pkg||!S.per||!S.cnt){bp.classList.remove('show');return;}
+  var schedule=BRANCH_SCHEDULES[S.pkg][S.per][S.cnt];
+  if(!schedule){bp.classList.remove('show');return;}
+  bp.classList.add('show'); wrap.innerHTML='';
+  for(var d=0;d<schedule.length;d++){
+    var dayMeals=schedule[d];var mealsHtml='';
+    for(var m=1;m<=S.cnt;m++){mealsHtml+='<div class="bp-meal-row"><div class="bp-meal-num">'+m+'</div><div class="bp-meal-name">'+(dayMeals[m]||'')+'</div></div>';}
+    wrap.innerHTML+='<div class="bp-day-card"><div class="bp-dc-head">يوم '+(d+1)+'</div><div class="dc-body">'+mealsHtml+'</div></div>';
+  }
+}
+
+function buildPlanner(){
+  var days=parseInt(S.per);
+  var meals=MEALS[S.pkg];
+  var mr=maxRep();
+  var total=days*S.cnt;
+  var pname=S.pkg==='chi'?'الدجاج':'المنوع';
+  document.getElementById('ruleNote').textContent='باقة '+pname+' | '+total+' وجبة ÷ '+PKG_N[S.pkg]+' أصناف = حد التكرار: '+mr+' مرة لكل صنف';
+  var old=JSON.parse(JSON.stringify(S.plan));
+  S.plan={};
+  var wrap=document.getElementById('daysWrap');
+  wrap.innerHTML='';
+  for(var d=1;d<=days;d++){
+    var slots='';
+    for(var m=1;m<=S.cnt;m++){
+      var prev=(old[d]&&old[d][m])||'';
+      var opts='<option value="">— وجبة '+m+' —</option>';
+      for(var k=0;k<meals.length;k++){opts+='<option value="'+meals[k]+'"'+(meals[k]===prev?' selected':'')+'>'+meals[k]+'</option>';}
+      slots+='<select id="s'+d+'_'+m+'" onchange="onMeal('+d+','+m+',this.value)">'+opts+'</select>';
+      slots+='<span class="mv-span" id="mv'+d+'_'+m+'"></span>';
+      if(!S.plan[d])S.plan[d]={};
+      S.plan[d][m]=prev;
+    }
+    wrap.innerHTML+='<div class="day-card" id="dc'+d+'"><div class="dc-head">يوم '+d+'</div><div class="dc-body">'+slots+'<div class="err-line" id="el'+d+'"></div></div></div>';
+  }
+  doStats(); doValidate();
+}
+
+function onMeal(d,m,v){if(!S.plan[d])S.plan[d]={};S.plan[d][m]=v;doStats();doValidate();}
+
+function countMeals(){
+  var c={},days=parseInt(S.per)||0;
+  for(var d=1;d<=days;d++) for(var m=1;m<=S.cnt;m++){var v=(S.plan[d]&&S.plan[d][m])||'';if(v)c[v]=(c[v]||0)+1;}
+  return c;
+}
+
+function doValidate(){
+  var days=parseInt(S.per)||0, mr=maxRep(), counts=countMeals();
+  for(var d=1;d<=days;d++){
+    var card=document.getElementById('dc'+d);var el=document.getElementById('el'+d);var errTxt='';
+    for(var m=1;m<=S.cnt;m++){
+      var sel=document.getElementById('s'+d+'_'+m);if(!sel)continue;
+      var v=(S.plan[d]&&S.plan[d][m])||'';sel.classList.remove('sw','se');
+      if(v){if(counts[v]>mr){sel.classList.add('se');errTxt='"'+v+'" تكررت '+counts[v]+' مرات (الحد '+mr+')';}else if(counts[v]===mr)sel.classList.add('sw');}
+    }
+    if(errTxt){el.textContent='⚠️ '+errTxt;el.classList.add('show');card.classList.add('bad');}
+    else{el.textContent='';el.classList.remove('show');card.classList.remove('bad');}
+  }
+}
+
+function doStats(){
+  var counts=countMeals(),mr=maxRep(),bar=document.getElementById('statsBar'),keys=Object.keys(counts);
+  if(!keys.length){bar.innerHTML='<span style="color:#999;font-size:12px">ابدأ بالاختيار...</span>';return;}
+  var html='';
+  for(var i=0;i<keys.length;i++){var n=keys[i],c=counts[n];var cls=c<mr?'ok':c===mr?'warn':'err';var ico=c<mr?'✅':c===mr?'⚠️':'❌';html+='<span class="chip '+cls+'">'+ico+' '+n+': '+c+'/'+mr+'</span>';}
+  bar.innerHTML=html;
+}
+
+// ══════════════════════════════════════════
+// SUBMIT
+// ══════════════════════════════════════════
+async function doSubmit(){
+  var name=document.getElementById('fName').value.trim();
+  var phone=document.getElementById('fPhone').value.trim();
+  var date=document.getElementById('fDate').value;
+  if(!name){alert('يرجى إدخال الاسم الكامل');return;}
+  if(!phone||phone.length<10){alert('يرجى إدخال رقم جوال صحيح');return;}
+  if(!date){alert('يرجى تحديد تاريخ بداية الاشتراك');return;}
+  if(!S.sameDay){alert('يرجى تحديد: هل تستلم وجبتك في نفس يوم الاشتراك؟');return;}
+  if(!S.pkg){alert('يرجى اختيار نوع الباقة');return;}
+  if(!S.cnt){alert('يرجى اختيار عدد الوجبات اليومية');return;}
+  if(!S.per){alert('يرجى اختيار مدة الاشتراك');return;}
+  if(!S.choice){alert('يرجى تحديد طريقة اختيار الوجبات');return;}
+  if(!S.subType){alert('يرجى تحديد نوع الاشتراك (استلام / توصيل / جولدز جيم)');return;}
+  if(S.subType==='delivery'&&!userLocText){alert('يرجى تحديد موقعك للتوصيل — اضغط على "افتح خرائط جوجل" ثم الصق الرابط');return;}
+  if(S.choice==='self'){
+    var days=parseInt(S.per),mr=maxRep(),counts={};
+    for(var d=1;d<=days;d++){for(var m=1;m<=S.cnt;m++){var v=(S.plan[d]&&S.plan[d][m])||'';if(!v){alert('⚠️ يوم '+d+' - الوجبة '+m+': لم يتم الاختيار بعد');return;}counts[v]=(counts[v]||0)+1;}}
+    var pname=S.pkg==='chi'?'الدجاج':'المنوع';
+    for(var n in counts){if(counts[n]>mr){alert('❌ خطأ في جدول الوجبات!\n\nباقة '+pname+':\nوجبة "'+n+'" تكررت '+counts[n]+' مرات.\nالحد المسموح = '+mr+' مرة فقط.\n\nيرجى تعديل الجدول.');return;}}
+  }
+  if(!S.agreed){alert('يجب الموافقة على الشروط والأحكام أولاً');return;}
+  if(!SP||SP.isEmpty()){alert('يرجى وضع التوقيع');return;}
+
+  document.getElementById('vName').textContent=name;
+  document.getElementById('vPhone').textContent=phone;
+  document.getElementById('vDate').textContent=date;
+
+  if(S.sameDay==='date'){
+    var latestDate=document.getElementById('fDate').value;
+    var latestTxt='📅 يستلم في تاريخ الاشتراك: '+(latestDate||'—');
+    document.getElementById('sdBadge').textContent=latestTxt;
+    document.getElementById('vSameDay').textContent=latestTxt;
+  }
+  document.getElementById('sdCapRow').style.display='flex';
+  if(S.choice==='self'){
+    var days2=parseInt(S.per);
+    for(var d2=1;d2<=days2;d2++) for(var m2=1;m2<=S.cnt;m2++){var el2=document.getElementById('mv'+d2+'_'+m2);if(el2)el2.textContent=(S.plan[d2]&&S.plan[d2][m2])||'';}
+  }
+
+  document.body.classList.add('cap');
+  var cv=await html2canvas(document.getElementById('mainPage'),{scale:2,useCORS:true});
+  savedImg=cv.toDataURL('image/png');
+  document.body.classList.remove('cap');
+  document.getElementById('sdCapRow').style.display='none';
+
+  // Build WhatsApp message
+  var plab=S.pkg==='chi'?'باقة الدجاج':'الباقة المنوعة';
+  var sdLabel='';
+  if(S.sameDay==='yes') sdLabel='✅ نعم';
+  else if(S.sameDay==='no') sdLabel='❌ لا';
+  else if(S.sameDay==='date') sdLabel='📅 تاريخ الاشتراك: '+date;
+
+  var stIcons={restaurant:'🏪',delivery:'🚗',gym:'💪'};
+  var stNames={restaurant:'استلام المطعم',delivery:'توصيل',gym:'فروع جولدز جيم'};
+  var stLabel=(stIcons[S.subType]||'')+' '+(stNames[S.subType]||S.subType);
+  if(S.subType==='delivery'&&userLocText) stLabel+='\n◈ موقع التوصيل: '+userLocText;
+
+  var msg='◈ استمارة اشتراك NEOTRISH ◈\n▬▬▬▬▬▬▬▬▬▬▬▬▬\n';
+  msg+='◈ الاسم: '+name+'\n◈ الجوال: '+phone+'\n';
+  msg+='◈ الباقة: '+plab+'\n◈ الوجبات يومياً: '+S.cnt+'\n';
+  msg+='◈ المدة: '+(S.per==='24'?'24 يوم':'12 يوم')+'\n';
+  msg+='◈ تاريخ البداية: '+date+'\n';
+  msg+='◈ استلام يوم الاشتراك: '+sdLabel+'\n';
+  msg+='◈ الإجمالي: '+getTotal()+' ريال\n';
+  msg+='◈ نوع الاشتراك: '+stLabel+'\n';
+
+  // ✅ الإضافات — التعديل المطلوب
+  if(S.adds.length>0){
+    var addNames=S.adds.map(function(a){return ADDON_N[a];});
+    msg+='◈ الإضافات: '+addNames.join(' | ')+'\n';
+  } else {
+    msg+='◈ الإضافات: لا يوجد\n';
+  }
+
+  msg+='◈ تحديد الوجبات: '+(S.choice==='self'?'العميل يختار':'الفرع يختار');
+  if(S.choice==='self'){
+    msg+='\n\n◈ جدول الوجبات:\n▬▬▬▬▬▬▬▬▬▬▬▬▬';
+    var days3=parseInt(S.per);
+    for(var d3=1;d3<=days3;d3++){var parts=[];for(var m3=1;m3<=S.cnt;m3++)parts.push(S.plan[d3][m3]);msg+='\nيوم '+d3+': '+parts.join(' + ');}
+  } else {
+    var bSched=BRANCH_SCHEDULES[S.pkg]&&BRANCH_SCHEDULES[S.pkg][S.per]&&BRANCH_SCHEDULES[S.pkg][S.per][S.cnt];
+    if(bSched){msg+='\n\n◈ جدول الوجبات (اختيار الفرع):\n▬▬▬▬▬▬▬▬▬▬▬▬▬';for(var db=0;db<bSched.length;db++){var bparts=[];for(var mb=1;mb<=S.cnt;mb++)bparts.push(bSched[db][mb]);msg+='\nيوم '+(db+1)+': '+bparts.join(' + ');}}
+  }
+  document.getElementById('waLink').href='https://wa.me/966570099700?text='+encodeURIComponent(msg);
+
+  // ══════════════════════════════════════════
+  // ✅ إرسال البيانات إلى Google Sheets
+  // ══════════════════════════════════════════
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbxsz51l-eko6Ws5uFczvipTfweJZ6q-JbCjY4H08E-EP-LsCGmehH6YcoIuK_0ab8Tm/exec';
+
+  // بناء جدول الوجبات نصياً
+  var planText = '';
+  if(S.choice === 'self'){
+    var daysSheet = parseInt(S.per);
+    for(var ds = 1; ds <= daysSheet; ds++){
+      var partsSheet = [];
+      for(var ms = 1; ms <= S.cnt; ms++) partsSheet.push(S.plan[ds][ms]);
+      planText += 'يوم ' + ds + ': ' + partsSheet.join(' + ') + '\n';
+    }
+  } else {
+    var bSchedSheet = BRANCH_SCHEDULES[S.pkg] && BRANCH_SCHEDULES[S.pkg][S.per] && BRANCH_SCHEDULES[S.pkg][S.per][S.cnt];
+    if(bSchedSheet){
+      for(var dbs = 0; dbs < bSchedSheet.length; dbs++){
+        var bpartsSheet = [];
+        for(var mbs = 1; mbs <= S.cnt; mbs++) bpartsSheet.push(bSchedSheet[dbs][mbs]);
+        planText += 'يوم ' + (dbs+1) + ': ' + bpartsSheet.join(' + ') + '\n';
+      }
+    } else { planText = 'اختيار الفرع'; }
+  }
+
+  var addsText = S.adds.length > 0 ? S.adds.map(function(a){return ADDON_N[a];}).join(' | ') : 'لا يوجد';
+
+  var sheetData = {
+    name:    name,
+    phone:   phone,
+    date:    date,
+    sameDay: sdLabel,
+    pkg:     plab,
+    cnt:     S.cnt + ' وجبة/يوم',
+    per:     S.per === '24' ? '24 يوم' : '12 يوم',
+    adds:    addsText,
+    subType: (stNames[S.subType] || S.subType) + (S.subType==='delivery'&&userLocText?' | '+userLocText:''),
+    total:   getTotal() + ' ريال',
+    choice:  S.choice === 'self' ? 'العميل يختار' : 'الفرع يختار',
+    plan:    planText.trim()
+  };
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(sheetData)
+  }).then(function(){
+    console.log('✅ تم الإرسال إلى Google Sheets');
+  }).catch(function(err){
+    console.log('⚠️ خطأ في الإرسال:', err);
+  });
+  // ══════════════════════════════════════════
+
+  document.getElementById('formBody').style.display='none';
+  document.getElementById('successDiv').style.display='block';
+}
+
+function doDownload(){
+  if(!savedImg) return;
+  var a=document.createElement('a');
+  a.download='استمارة_اشتراك_'+(document.getElementById('fName').value||'نيوتريش')+'.png';
+  a.href=savedImg; a.click();
+}
+
+// ══════════════════════════════════════════
+// INVOICE FUNCTIONS
+// ══════════════════════════════════════════
+function showInvoice(){
+  var name=document.getElementById('fName').value.trim();
+  var phone=document.getElementById('fPhone').value.trim();
+  var date=document.getElementById('fDate').value;
+  var total=getTotal();
+  var plab=S.pkg==='chi'?'باقة الدجاج 🍗':'الباقة المنوعة 🐟';
+  var perLabel=S.per==='24'?'24 يوم (4 أسابيع)':'12 يوم (أسبوعان)';
+
+  invCounter++;
+  var invNum='NTSH-'+String(invCounter).padStart(4,'0');
+  document.getElementById('invNumBadge').textContent='رقم: #'+invNum;
+
+  var now=new Date();
+  var issueStr=now.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('invIssueDate').textContent=issueStr;
+
+  document.getElementById('invName').textContent=name;
+  document.getElementById('invPhone').textContent=phone;
+  document.getElementById('invDate').textContent=date;
+  var sdTxt=S.sameDay==='yes'?'✅ نعم':S.sameDay==='no'?'❌ لا — من الغد':'📅 في تاريخ الاشتراك';
+  var stN={restaurant:'🏪 استلام المطعم',delivery:'🚗 توصيل',gym:'💪 جولدز جيم'};
+  var stDisplay=stN[S.subType]||'—';
+  if(S.subType==='gym'&&S.gymBranch) stDisplay+=' — فرع '+S.gymBranch;
+  document.getElementById('invSubType').textContent=stDisplay;
+  document.getElementById('invSameDay').textContent=sdTxt;
+
+  document.getElementById('invPkg').textContent=plab;
+  var cntLabel={1:'وجبة واحدة',2:'وجبتان',3:'3 وجبات',4:'4 وجبات'}[S.cnt]||S.cnt+' وجبات';
+  document.getElementById('invCnt').textContent=cntLabel;
+  document.getElementById('invPer').textContent=perLabel;
+
+  var tbody=document.getElementById('invTableBody');
+  tbody.innerHTML='';
+  var basePrice=PRICE[S.pkg][S.per][S.cnt];
+  var rows=[];
+  rows.push({name:plab+' — '+perLabel+' | '+cntLabel,qty:1,price:basePrice});
+  S.adds.forEach(function(a){
+    var p=ADDON_P[S.per][a]||0;
+    rows.push({name:'إضافة: '+ADDON_N[a],qty:parseInt(S.per),price:p});
+  });
+  var df=deliveryFee();
+  if(df>0) rows.push({name:'🚗 رسوم التوصيل — '+perLabel,qty:1,price:df});
+
+  var subtotal=0;
+  rows.forEach(function(r,i){
+    subtotal+=r.price;
+    tbody.innerHTML+='<tr>'+
+      '<td><span class="item-num">'+(i+1)+'</span></td>'+
+      '<td>'+r.name+'</td>'+
+      '<td class="inv-qty">'+r.qty+'</td>'+
+      '<td class="inv-price">'+r.price.toLocaleString('ar')+' ﷼</td>'+
+    '</tr>';
+  });
+
+  document.getElementById('invSubtotal').textContent=subtotal.toLocaleString('ar')+' ريال';
+  document.getElementById('invTotal').textContent=total.toLocaleString('ar');
+
+  var invMsg='🧾 فاتورة اشتراك NEOTRISH #'+invNum+'\n';
+  invMsg+='━━━━━━━━━━━━━━━━\n';
+  invMsg+='👤 الاسم: '+name+'\n📱 الجوال: '+phone+'\n';
+  invMsg+='📦 الباقة: '+plab+'\n⏱ المدة: '+perLabel+'\n🍽 الوجبات: '+cntLabel+'\n';
+  var stN2={restaurant:'🏪 استلام المطعم',delivery:'🚗 توصيل',gym:'💪 جولدز جيم'};
+  var stLine=stN2[S.subType]||'';
+  if(S.subType==='gym'&&S.gymBranch) stLine+=' — فرع: '+S.gymBranch;
+  if(stLine) invMsg+='📍 نوع الاشتراك: '+stLine+'\n';
+
+  // ✅ الإضافات في فاتورة الواتساب أيضاً
+  if(S.adds.length>0){
+    var addNamesInv=S.adds.map(function(a){return ADDON_N[a];});
+    invMsg+='➕ الإضافات: '+addNamesInv.join(' | ')+'\n';
+  }
+
+  invMsg+='━━━━━━━━━━━━━━━━\n';
+  invMsg+='💰 المبلغ الإجمالي: '+total.toLocaleString('ar')+' ريال سعودي\n';
+  invMsg+='━━━━━━━━━━━━━━━━\n';
+  invMsg+='🏦 مصرف الراجحي\nIBAN: SA2680000532608016147230\n* يرجى إرفاق صورة الحوالة';
+  document.getElementById('waInvLink').href='https://wa.me/966570099700?text='+encodeURIComponent(invMsg);
+
+  document.getElementById('mainPage').style.display='none';
+  document.getElementById('invoicePage').style.display='block';
+  window.scrollTo(0,0);
+}
+
+function hideInvoice(){
+  document.getElementById('invoicePage').style.display='none';
+  document.getElementById('mainPage').style.display='block';
+  window.scrollTo(0,0);
+}
+
+async function downloadInvoice(){
+  var actionsEl=document.querySelector('.inv-actions');
+  actionsEl.style.display='none';
+  var cv=await html2canvas(document.getElementById('invoiceWrap'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  actionsEl.style.display='';
+  var name=document.getElementById('fName').value||'نيوتريش';
+  var a=document.createElement('a');
+  a.download='فاتورة_'+name+'.png';
+  a.href=cv.toDataURL('image/png');
+  a.click();
+}
+</script>
+
+</body>
+</html>
