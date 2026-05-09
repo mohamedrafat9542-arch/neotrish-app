@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -424,6 +425,7 @@ input[type=number].fc{direction:ltr;text-align:right}
 </div>
 
 <!-- ITEM MODAL -->
+
 <div class="ovr" id="iOvr">
   <div class="modal">
     <div class="m-hd"><h3 id="iMT">إضافة بند</h3><button class="m-x" onclick="cOvr('iOvr')">✕</button></div>
@@ -439,6 +441,7 @@ input[type=number].fc{direction:ltr;text-align:right}
 </div>
 
 <!-- CONFIRM -->
+
 <div class="ovr" id="cfOvr">
   <div class="conf-m">
     <div class="ci">🗑️</div><h3>تأكيد الحذف</h3>
@@ -493,11 +496,70 @@ let A={
 let edt=null,dlt=null,asc=null,itm='i',CHS={},cmpM=[];
 
 // ════════════════════════════════════════════════
-//  STORAGE
+//  FIREBASE CLOUD STORAGE
 // ════════════════════════════════════════════════
-const SK='neotrish_v1';
-function save(){try{localStorage.setItem(SK,JSON.stringify({company:A.company,cfo:A.cfo,currency:A.currency,unit:A.unit,cy:A.cy,cm:A.cm,years:A.years}));toast('تم الحفظ ✅','ok');}catch(e){toast('فشل: '+e.message,'err');}}
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const d=JSON.parse(r);Object.assign(A,d);return true;}catch{return false;}}
+const FB_URL='https://neotrish-app-default-rtdb.firebaseio.com/data.json';
+let saving=false;
+
+function getPayload(){
+  return {company:A.company,cfo:A.cfo,currency:A.currency,unit:A.unit,cy:A.cy,cm:A.cm,years:A.years};
+}
+
+// حفظ سحابي
+function save(){
+  if(saving)return;
+  saving=true;
+  const btn=document.querySelector('.btn-go');
+  if(btn){btn._orig=btn.textContent;btn.textContent='⏳ جاري الحفظ...';}
+  fetch(FB_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(getPayload())})
+    .then(r=>{
+      if(!r.ok)throw new Error(r.status);
+      toast('✅ تم الحفظ السحابي','ok');
+      // احفظ محلياً أيضاً كنسخة احتياطية
+      try{localStorage.setItem('neotrish_v1',JSON.stringify(getPayload()));}catch{}
+    })
+    .catch(e=>toast('خطأ في الحفظ: '+e.message,'err'))
+    .finally(()=>{
+      saving=false;
+      if(btn)btn.textContent=btn._orig||'💾 حفظ';
+    });
+}
+
+// تحميل من السحابة
+function load(cb){
+  // أظهر شاشة تحميل
+  document.getElementById('app').style.opacity='0.4';
+  fetch(FB_URL)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d&&d.years){
+        Object.assign(A,d);
+        toast('☁️ تم تحميل البيانات من السحابة','nfo');
+        cb(true);
+      } else {
+        // لا توجد بيانات سحابية — جرب المحلية
+        try{
+          const r=localStorage.getItem('neotrish_v1');
+          if(r){const dd=JSON.parse(r);if(dd.years){Object.assign(A,dd);}}
+        }catch{}
+        cb(false);
+      }
+    })
+    .catch(()=>{
+      // فشل الاتصال — جرب المحلية
+      try{
+        const r=localStorage.getItem('neotrish_v1');
+        if(r){const d=JSON.parse(r);if(d.years)Object.assign(A,d);}
+      }catch{}
+      toast('⚠️ لم يتم الاتصال — تم تحميل البيانات المحلية','err');
+      cb(false);
+    })
+    .finally(()=>{document.getElementById('app').style.opacity='1';});
+}
+
+// حفظ تلقائي كل 30 ثانية
+setInterval(()=>{ if(!saving) save(); }, 30000);
+
 function expJSON(){const b=new Blob([JSON.stringify(A,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`neotrish_${A.cy}.json`;a.click();toast('تم التصدير','nfo');}
 function impBtn(){document.getElementById('impFile').click();}
 function doImp(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.years){Object.assign(A,d);save();rAll();toast('تم الاستيراد ✅','ok');}else toast('ملف غير صالح','err');}catch{toast('خطأ','err');}};r.readAsText(f);}
@@ -952,361 +1014,4 @@ function rAnn(){
     return `<div class="amc${i===A.cm?' on':''}" onclick="selM(${i});gp('dash',document.querySelector('[data-p=dash]'))">
       <div class="amc-dot" style="background:${dc}"></div>
       <div class="amc-m">${nm}</div>
-      ${hd?`<div class="amc-r">↑ ${fmt(c.rev)}</div><div class="amc-n ${c.net>=0?'p':'n'}">صافي: ${fmt(c.net)}</div>`:`<div class="amc-e">لا توجد بيانات</div>`}
-    </div>`;
-  }).join('');
-
-  const cs=MN.map((_,i)=>cMo(y,i));
-  const LO={labels:{color:'#5a90b8',font:{family:'Cairo',size:10}}};
-
-  dCh('annT','line',{labels:MS,datasets:[
-    {label:'الإيرادات',data:cs.map(c=>c.rev),borderColor:'rgba(0,204,216,.9)',backgroundColor:'rgba(0,204,216,.06)',tension:.35,fill:true,pointRadius:3},
-    {label:'مجمل الربح',data:cs.map(c=>c.grs),borderColor:'rgba(0,200,144,.9)',tension:.35,fill:false,pointRadius:3},
-    {label:'صافي الربح',data:cs.map(c=>c.net),borderColor:'rgba(245,168,0,.9)',tension:.35,fill:false,pointRadius:3},
-  ]},{responsive:true,maintainAspectRatio:false,plugins:{legend:LO,tooltip:tO(ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y))},scales:{x:{grid:GO()},y:{grid:GO(),ticks:{callback:v=>fmtN(v),font:{size:9}}}}});
-
-  dCh('annR','bar',{labels:MS,datasets:[{label:'الإيرادات',data:cs.map(c=>c.rev),backgroundColor:cs.map(c=>c.rev>0?'rgba(0,204,216,.7)':'rgba(80,80,80,.4)'),borderRadius:4,borderSkipped:false}]},
-    {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tO(ctx=>fmt(ctx.parsed.y))},scales:{x:{grid:{display:false}},y:{grid:GO(),ticks:{callback:v=>fmtN(v),font:{size:9}}}}});
-
-  dCh('annM','line',{labels:MS,datasets:[
-    {label:'هامش مجمل الربح %',data:cs.map(c=>+c.gm.toFixed(2)),borderColor:'rgba(0,200,144,.9)',tension:.35,pointRadius:3},
-    {label:'هامش صافي الربح %',data:cs.map(c=>+c.nm.toFixed(2)),borderColor:'rgba(0,204,216,.9)',tension:.35,pointRadius:3},
-  ]},{responsive:true,maintainAspectRatio:false,plugins:{legend:LO,tooltip:tO(ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%')},scales:{x:{grid:GO()},y:{grid:GO(),ticks:{callback:v=>v+'%',font:{size:9}}}}});
-}
-
-// ════════════════════════════════════════════════
-//  ITEM CRUD
-// ════════════════════════════════════════════════
-function oAdd(si){
-  edt=null;asc=si;
-  document.getElementById('iMT').textContent='➕ إضافة بند';
-  document.getElementById('iNm').value='';document.getElementById('iAm').value='';
-  document.getElementById('iNt').value='';document.getElementById('iCat').value='';
-  document.getElementById('iDt').value=new Date().toISOString().split('T')[0];
-  const isO=si==='other'||si==='expenses',isR=si==='revenue';
-  document.getElementById('typW').style.display=isO?'block':'none';
-  document.getElementById('iSecW').style.display='none';
-  sIT(isR?'i':'e');
-  oOvr('iOvr');setTimeout(()=>document.getElementById('iNm').focus(),100);
-}
-function oEd(si,id){
-  const md=curD(),sec=md.sections.find(s=>s.id===si),item=sec.items.find(i=>i.id===id);
-  edt={si,id};
-  document.getElementById('iMT').textContent='✏️ تعديل البند';
-  document.getElementById('iNm').value=item.name;document.getElementById('iAm').value=item.amount;
-  document.getElementById('iNt').value=item.note||'';document.getElementById('iCat').value=item.cat||'';
-  document.getElementById('iDt').value=item.date||'';
-  const isO=si==='other'||si==='expenses';
-  document.getElementById('typW').style.display=isO?'block':'none';
-  document.getElementById('iSecW').style.display='none';
-  if(isO)sIT(item.isIncome?'i':'e');else sIT('e');
-  oOvr('iOvr');
-}
-function sIT(t){itm=t;document.getElementById('ttI').classList.toggle('on',t==='i');document.getElementById('ttE').classList.toggle('on',t==='e');}
-function svItem(){
-  const nm=document.getElementById('iNm').value.trim();
-  const am=parseFloat(document.getElementById('iAm').value)||0;
-  const nt=document.getElementById('iNt').value.trim();
-  const cat=document.getElementById('iCat').value.trim();
-  const dt=document.getElementById('iDt').value;
-  if(!nm){toast('أدخل اسم البند','err');return;}
-  if(am<=0){toast('أدخل مبلغاً أكبر من صفر','err');return;}
-  const md=curD();
-  if(edt){
-    const sec=md.sections.find(s=>s.id===edt.si),item=sec.items.find(i=>i.id===edt.id);
-    item.name=nm;item.amount=am;item.note=nt;item.cat=cat;item.date=dt;
-    const isO=edt.si==='other'||edt.si==='expenses';
-    if(isO)item.isIncome=itm==='i';
-    toast('تم التعديل ✅','ok');
-  } else {
-    const sec=md.sections.find(s=>s.id===asc);
-    const isO=sec.id==='other'||sec.id==='expenses',isR=sec.id==='revenue';
-    const ii=isR||(isO&&itm==='i');
-    sec.items.push({id:md.nid++,name:nm,amount:am,note:nt,cat,date:dt,isIncome:ii});
-    toast('تم الإضافة ✅','ok');
-  }
-  cOvr('iOvr');save();rAll();
-}
-function oDel(si,id,nm){dlt={si,id};document.getElementById('cfMsg').textContent=`هل تريد حذف "${nm}"؟`;oOvr('cfOvr');}
-function doDel(){if(!dlt)return;const md=curD(),sec=md.sections.find(s=>s.id===dlt.si);sec.items=sec.items.filter(i=>i.id!==dlt.id);dlt=null;cOvr('cfOvr');save();rAll();toast('تم الحذف','nfo');}
-
-// ════════════════════════════════════════════════
-//  EXCEL EXPORT
-// ════════════════════════════════════════════════
-function expXls(){
-  const y=A.cy,m=A.cm,c=cMo(y,m),md=curD(),wb=XLSX.utils.book_new();
-  const rows=[[A.company,'','','',''],
-    [`قائمة الدخل — ${MN[m]} ${y}`,'','','',''],
-    ['التاريخ','الحساب','البند','المبلغ','%','ملاحظة']];
-  md.sections.forEach(sec=>{
-    const mt=SMETA[sec.id];rows.push(['','','','','','']);rows.push([mt.name,'','','','','']);
-    sec.items.forEach(it=>{rows.push([it.date||'',it.cat||'',it.name,it.amount,c.rev?(it.amount/c.rev*100).toFixed(1)+'%':'',it.note||'']);});
-    rows.push([`إجمالي ${mt.name}`,'','',Math.abs(sTot(sec)),'','']);
-  });
-  rows.push(['','','','','',''],['صافي الربح','','',c.net,'','']);
-  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:12},{wch:18},{wch:28},{wch:14},{wch:10},{wch:28}];
-  XLSX.utils.book_append_sheet(wb,ws,`${MN[m]} ${y}`);
-  XLSX.writeFile(wb,`نيوترش_${MN[m]}_${y}.xlsx`);toast('تم التصدير 📥','nfo');
-}
-function expAnn(){
-  const y=A.cy,wb=XLSX.utils.book_new();
-  const sr=[[A.company,''],[`التقرير السنوي ${y}`,''],[' ',''],
-    ['الشهر','الإيرادات','تكلفة المبيعات','المصروفات التشغيلية','مصروفات الشهر','مجمل الربح','صافي الربح','هامش الربح %']];
-  MN.forEach((nm,i)=>{const c=cMo(y,i);sr.push([nm,c.rev,c.cogs,c.opex,c.expItems,c.grs,c.net,pct(c.nm)]);});
-  const a=cAnn(y);sr.push(['المجموع',a.rev,a.cogs,a.opex,a.expItems,a.grs,a.net,pct(a.nm)]);
-  const ws=XLSX.utils.aoa_to_sheet(sr);ws['!cols']=[{wch:12},{wch:14},{wch:14},{wch:16},{wch:14},{wch:14},{wch:14},{wch:12}];
-  XLSX.utils.book_append_sheet(wb,ws,'ملخص سنوي');
-  XLSX.writeFile(wb,`نيوترش_سنوي_${y}.xlsx`);toast('تم تصدير السنة 📥','nfo');
-}
-
-// ════════════════════════════════════════════════
-//  SETTINGS
-// ════════════════════════════════════════════════
-function lCfg(){document.getElementById('cfComp').value=A.company;document.getElementById('cfCFO').value=A.cfo;document.getElementById('cfCur').value=A.currency;document.getElementById('cfUnit').value=String(A.unit);}
-function apCfg(){A.company=document.getElementById('cfComp').value;A.cfo=document.getElementById('cfCFO').value;A.currency=document.getElementById('cfCur').value;A.unit=Number(document.getElementById('cfUnit').value);document.getElementById('coNm').textContent=A.company;save();toast('تم حفظ الإعدادات ✅','ok');}
-
-// ════════════════════════════════════════════════
-//  CHART HELPER
-// ════════════════════════════════════════════════
-Chart.defaults.color='#5a90b8';Chart.defaults.font.family='Cairo';
-function dCh(id,type,data,opts){if(CHS[id]){CHS[id].destroy();delete CHS[id];}const c=document.getElementById(id);if(!c)return;CHS[id]=new Chart(c,{type,data,options:opts});}
-
-// ════════════════════════════════════════════════
-//  UTILS
-// ════════════════════════════════════════════════
-function oOvr(id){document.getElementById(id).classList.add('on');}
-function cOvr(id){document.getElementById(id).classList.remove('on');}
-document.addEventListener('click',e=>{if(e.target.classList.contains('ovr'))e.target.classList.remove('on');});
-function toast(msg,t='nfo'){const el=document.createElement('div');el.className=`toast ${t}`;el.textContent=msg;document.getElementById('tbx').appendChild(el);setTimeout(()=>el.remove(),2400);}
-
-// ════════════════════════════════════════════════
-//  INIT — Load real data from Excel
-// ════════════════════════════════════════════════
-(function(){
-  const ok=load();
-  eY(2026);
-
-  if(!ok){
-    // ── يناير 2026 ──
-    const jan=gM(2026,0);
-    jan.sections.find(s=>s.id==='revenue').items=[
-      {id:1,name:'مبيعات ابعاد الرياضة (مدي+كاش)',amount:142956.5,note:'فرع ابعاد الرياضة',cat:'',date:'2026-01-31',isIncome:true},
-      {id:2,name:'مبيعات قولدز جيم رجال (مدي+كاش)',amount:12366.99,note:'فرع قولدز جيم',cat:'',date:'2026-01-31',isIncome:true},
-      {id:3,name:'مبيعات فرع النساء',amount:18837.5,note:'فروع النساء',cat:'',date:'2026-01-31',isIncome:true},
-      {id:4,name:'مبيعات الاشتراكات التحويلات البنكية',amount:18404.24,note:'اشتراكات',cat:'',date:'2026-01-31',isIncome:true},
-      {id:5,name:'مبيعات التوصيل',amount:17860.59,note:'',cat:'',date:'2026-01-31',isIncome:true},
-    ];
-    jan.sections.find(s=>s.id==='cogs').items=[
-      {id:10,name:'رصيد أول المدة (جرد ديسمبر)',amount:16096.125,note:'',cat:'',date:'2026-01-31',isIncome:false},
-      {id:11,name:'مشتريات مواد خام يناير',amount:69941.04,note:'',cat:'',date:'2026-01-31',isIncome:false},
-      {id:12,name:'بضاعة آخر المدة (جرد يناير)',amount:-16087.556,note:'يُطرح',cat:'',date:'2026-01-31',isIncome:false},
-      {id:13,name:'جرد المستودع',amount:-9250,note:'يُطرح',cat:'',date:'2026-01-31',isIncome:false},
-    ];
-    jan.sections.find(s=>s.id==='opex').items=[
-      {id:20,name:'صافي الرواتب',amount:42135.03,note:'',cat:'رواتب',date:'2026-01-31',isIncome:false},
-      {id:21,name:'إيجار ابعاد الرياضة',amount:5834,note:'',cat:'إيجارات',date:'2026-01-31',isIncome:false},
-      {id:22,name:'إيجار قولدز جيم الرجال',amount:5000,note:'',cat:'إيجارات',date:'2026-01-31',isIncome:false},
-      {id:23,name:'إيجار قولدز جيم النساء',amount:5000,note:'',cat:'إيجارات',date:'2026-01-31',isIncome:false},
-      {id:24,name:'إيجار سكن العمال',amount:1300,note:'',cat:'إيجارات',date:'2026-01-31',isIncome:false},
-      {id:25,name:'إيجار المكتب',amount:1700,note:'',cat:'إيجارات',date:'2026-01-31',isIncome:false},
-      {id:26,name:'إيجار المستودع',amount:2800,note:'',cat:'إيجارات',date:'2026-01-31',isIncome:false},
-      {id:27,name:'المرافق (كهرباء/ماء/غاز)',amount:4124,note:'',cat:'مرافق',date:'2026-01-31',isIncome:false},
-      {id:28,name:'مصاريف مكتب الإدارة',amount:89,note:'',cat:'مصروفات عمومية',date:'2026-01-31',isIncome:false},
-      {id:29,name:'انترنت وهاتف',amount:804.75,note:'',cat:'هاتف وانترنت',date:'2026-01-31',isIncome:false},
-      {id:30,name:'شهادات صحية للعمال',amount:1872,note:'',cat:'مصروفات عمومية',date:'2026-01-31',isIncome:false},
-      {id:31,name:'اقامات وتعقيب',amount:5100,note:'',cat:'مصروفات عمومية',date:'2026-01-31',isIncome:false},
-      {id:32,name:'حاوية بلدية',amount:460,note:'',cat:'مصروفات عمومية',date:'2026-01-31',isIncome:false},
-      {id:33,name:'نقل مشتريات مواد خام',amount:992.1,note:'',cat:'نقل ومواصلات',date:'2026-01-31',isIncome:false},
-      {id:34,name:'اكل عمال',amount:1710,note:'',cat:'اكل عمال',date:'2026-01-31',isIncome:false},
-      {id:35,name:'اشتراكات أنظمة تشغيل (مايكروتك+بيفاتل)',amount:1483.33,note:'',cat:'هاتف وانترنت',date:'2026-01-31',isIncome:false},
-      {id:36,name:'بنزين الشيري',amount:495.05,note:'',cat:'بنزين',date:'2026-01-31',isIncome:false},
-      {id:37,name:'قرطاسية',amount:349.5,note:'',cat:'قرطاسية',date:'2026-01-31',isIncome:false},
-      {id:38,name:'صيانة سيارات',amount:160,note:'',cat:'صيانة سيارات',date:'2026-01-31',isIncome:false},
-      {id:39,name:'مصاريف عمومية للمطعم',amount:5046.95,note:'',cat:'مصروفات عمومية',date:'2026-01-31',isIncome:false},
-      {id:40,name:'قرض بنك التنمية',amount:2500,note:'',cat:'قروض',date:'2026-01-31',isIncome:false},
-    ];
-    jan.nid=100;
-
-    // ── فبراير 2026 ──
-    const feb=gM(2026,1);
-    feb.sections.find(s=>s.id==='revenue').items=[
-      {id:101,name:'مبيعات ابعاد الرياضة (مدي+كاش)',amount:126514.7,note:'فرع ابعاد الرياضة',cat:'',date:'2026-02-28',isIncome:true},
-      {id:102,name:'مبيعات قولدز جيم رجال (مدي+كاش)',amount:12247.78,note:'',cat:'',date:'2026-02-28',isIncome:true},
-      {id:103,name:'مبيعات فرع النساء',amount:16891.06,note:'',cat:'',date:'2026-02-28',isIncome:true},
-      {id:104,name:'مبيعات الاشتراكات التحويلات البنكية',amount:8493.5,note:'',cat:'',date:'2026-02-28',isIncome:true},
-      {id:105,name:'مبيعات التوصيل',amount:15195.46,note:'',cat:'',date:'2026-02-28',isIncome:true},
-      {id:106,name:'مرتجع / هالك',amount:-155,note:'',cat:'',date:'2026-02-28',isIncome:false},
-    ];
-    feb.sections.find(s=>s.id==='cogs').items=[
-      {id:110,name:'رصيد أول المدة (جرد يناير)',amount:16087.556,note:'',cat:'',date:'2026-02-28',isIncome:false},
-      {id:111,name:'مشتريات مواد خام فبراير',amount:83518.39,note:'',cat:'',date:'2026-02-28',isIncome:false},
-      {id:112,name:'بضاعة آخر المدة (جرد فبراير)',amount:-17755.035,note:'يُطرح',cat:'',date:'2026-02-28',isIncome:false},
-      {id:113,name:'جرد المستودع',amount:-16250,note:'يُطرح',cat:'',date:'2026-02-28',isIncome:false},
-    ];
-    feb.sections.find(s=>s.id==='opex').items=[
-      {id:120,name:'صافي الرواتب',amount:40890.63,note:'',cat:'رواتب',date:'2026-02-28',isIncome:false},
-      {id:121,name:'إيجار ابعاد الرياضة',amount:5834,note:'',cat:'إيجارات',date:'2026-02-28',isIncome:false},
-      {id:122,name:'إيجار قولدز جيم الرجال',amount:5000,note:'',cat:'إيجارات',date:'2026-02-28',isIncome:false},
-      {id:123,name:'إيجار قولدز جيم النساء',amount:5000,note:'',cat:'إيجارات',date:'2026-02-28',isIncome:false},
-      {id:124,name:'إيجار سكن العمال',amount:1300,note:'',cat:'إيجارات',date:'2026-02-28',isIncome:false},
-      {id:125,name:'إيجار المكتب',amount:1700,note:'',cat:'إيجارات',date:'2026-02-28',isIncome:false},
-      {id:126,name:'إيجار المستودع',amount:2800,note:'',cat:'إيجارات',date:'2026-02-28',isIncome:false},
-      {id:127,name:'المرافق (كهرباء/ماء/غاز)',amount:4124,note:'',cat:'مرافق',date:'2026-02-28',isIncome:false},
-      {id:128,name:'مصاريف مكتب الإدارة',amount:449,note:'',cat:'مصروفات عمومية',date:'2026-02-28',isIncome:false},
-      {id:129,name:'انترنت وهاتف',amount:634.75,note:'',cat:'هاتف وانترنت',date:'2026-02-28',isIncome:false},
-      {id:130,name:'شهادات صحية للعمال',amount:60,note:'',cat:'مصروفات عمومية',date:'2026-02-28',isIncome:false},
-      {id:131,name:'مصروفات حكومية',amount:837,note:'',cat:'مصروفات عمومية',date:'2026-02-28',isIncome:false},
-      {id:132,name:'نقل مشتريات مواد خام',amount:901.72,note:'',cat:'نقل ومواصلات',date:'2026-02-28',isIncome:false},
-      {id:133,name:'اكل عمال',amount:1560,note:'',cat:'اكل عمال',date:'2026-02-28',isIncome:false},
-      {id:134,name:'اشتراكات أنظمة تشغيل (مايكروتك+بيفاتل)',amount:1483.33,note:'',cat:'هاتف وانترنت',date:'2026-02-28',isIncome:false},
-      {id:135,name:'بنزين الرينو',amount:50,note:'',cat:'بنزين',date:'2026-02-28',isIncome:false},
-      {id:136,name:'بنزين الشيري',amount:626.49,note:'',cat:'بنزين',date:'2026-02-28',isIncome:false},
-      {id:137,name:'قرطاسية',amount:442.41,note:'',cat:'قرطاسية',date:'2026-02-28',isIncome:false},
-      {id:138,name:'صيانة سيارات',amount:905,note:'',cat:'صيانة سيارات',date:'2026-02-28',isIncome:false},
-      {id:139,name:'مصاريف عمومية للمطعم',amount:2908.71,note:'',cat:'مصروفات عمومية',date:'2026-02-28',isIncome:false},
-      {id:140,name:'صيانة معدات المطعم',amount:3040.87,note:'',cat:'صيانة معدات',date:'2026-02-28',isIncome:false},
-      {id:141,name:'قرض بنك التنمية',amount:2500,note:'',cat:'قروض',date:'2026-02-28',isIncome:false},
-    ];
-    feb.nid=200;
-
-    // ── مارس 2026 ──
-    const mar=gM(2026,2);
-    mar.sections.find(s=>s.id==='revenue').items=[
-      {id:201,name:'مبيعات ابعاد الرياضة (مدي+كاش)',amount:125550.2,note:'فرع ابعاد الرياضة',cat:'',date:'2026-03-31',isIncome:true},
-      {id:202,name:'مبيعات قولدز جيم رجال (مدي+كاش)',amount:8060,note:'',cat:'',date:'2026-03-31',isIncome:true},
-      {id:203,name:'مبيعات فرع النساء',amount:7271.5,note:'',cat:'',date:'2026-03-31',isIncome:true},
-      {id:204,name:'مبيعات الاشتراكات التحويلات البنكية',amount:5112.2,note:'',cat:'',date:'2026-03-31',isIncome:true},
-      {id:205,name:'مبيعات التوصيل',amount:13219.26,note:'',cat:'',date:'2026-03-31',isIncome:true},
-      {id:206,name:'مرتجع / هالك',amount:-276,note:'',cat:'',date:'2026-03-31',isIncome:false},
-    ];
-    mar.sections.find(s=>s.id==='cogs').items=[
-      {id:210,name:'رصيد أول المدة (جرد فبراير)',amount:17755.035,note:'',cat:'',date:'2026-03-31',isIncome:false},
-      {id:211,name:'مشتريات مواد خام مارس',amount:64551.16,note:'',cat:'',date:'2026-03-31',isIncome:false},
-      {id:212,name:'بضاعة آخر المدة (جرد مارس)',amount:-16972,note:'يُطرح',cat:'',date:'2026-03-31',isIncome:false},
-      {id:213,name:'جرد المستودع',amount:-11600,note:'يُطرح',cat:'',date:'2026-03-31',isIncome:false},
-    ];
-    mar.sections.find(s=>s.id==='opex').items=[
-      {id:220,name:'صافي الرواتب',amount:41448.37,note:'',cat:'رواتب',date:'2026-03-31',isIncome:false},
-      {id:221,name:'إيجار ابعاد الرياضة',amount:5834,note:'',cat:'إيجارات',date:'2026-03-31',isIncome:false},
-      {id:222,name:'إيجار قولدز جيم الرجال',amount:5000,note:'',cat:'إيجارات',date:'2026-03-31',isIncome:false},
-      {id:223,name:'إيجار قولدز جيم النساء',amount:5000,note:'',cat:'إيجارات',date:'2026-03-31',isIncome:false},
-      {id:224,name:'إيجار سكن العمال',amount:1300,note:'',cat:'إيجارات',date:'2026-03-31',isIncome:false},
-      {id:225,name:'إيجار المكتب',amount:1700,note:'',cat:'إيجارات',date:'2026-03-31',isIncome:false},
-      {id:226,name:'إيجار المستودع',amount:2800,note:'',cat:'إيجارات',date:'2026-03-31',isIncome:false},
-      {id:227,name:'المرافق (كهرباء/ماء/غاز)',amount:4124,note:'',cat:'مرافق',date:'2026-03-31',isIncome:false},
-      {id:228,name:'مصاريف مكتب الإدارة',amount:1252,note:'',cat:'مصروفات عمومية',date:'2026-03-31',isIncome:false},
-      {id:229,name:'انترنت وهاتف',amount:537,note:'',cat:'هاتف وانترنت',date:'2026-03-31',isIncome:false},
-      {id:230,name:'نقل مشتريات مواد خام',amount:1217.89,note:'',cat:'نقل ومواصلات',date:'2026-03-31',isIncome:false},
-      {id:231,name:'اكل عمال',amount:2361.75,note:'',cat:'اكل عمال',date:'2026-03-31',isIncome:false},
-      {id:232,name:'اشتراكات أنظمة تشغيل (مايكروتك+بيفاتل)',amount:1483.33,note:'',cat:'هاتف وانترنت',date:'2026-03-31',isIncome:false},
-      {id:233,name:'بنزين الشيري',amount:759,note:'',cat:'بنزين',date:'2026-03-31',isIncome:false},
-      {id:234,name:'قرطاسية',amount:93,note:'',cat:'قرطاسية',date:'2026-03-31',isIncome:false},
-      {id:235,name:'صيانة سيارات',amount:3770,note:'',cat:'صيانة سيارات',date:'2026-03-31',isIncome:false},
-      {id:236,name:'مصاريف عمومية للمطعم',amount:4142.38,note:'',cat:'مصروفات عمومية',date:'2026-03-31',isIncome:false},
-      {id:237,name:'تذاكر سفر للموظفين',amount:1035,note:'تذكرة ذهاب احمد',cat:'تذاكر سفر',date:'2026-03-08',isIncome:false},
-      {id:238,name:'تشغيل / صيانة معدات',amount:3435,note:'مراوح + هود + فلتر',cat:'صيانة معدات',date:'2026-03-31',isIncome:false},
-      {id:239,name:'قرض بنك التنمية',amount:2500,note:'',cat:'قروض',date:'2026-03-31',isIncome:false},
-    ];
-    // مصروفات مارس المرفوعة (من ورقة مصروفات مارس)
-    mar.sections.find(s=>s.id==='expenses').items=[
-      {id:250,name:'شراء ملقاط هندي كبير ووسط',amount:55,cat:'مصروفات عمومية',date:'2026-03-03',note:'',isIncome:false},
-      {id:251,name:'شراء سوك بطارية وبطارية',amount:16,cat:'مصروفات عمومية',date:'2026-03-05',note:'',isIncome:false},
-      {id:252,name:'شراء سوك بطارية',amount:27,cat:'مصروفات عمومية',date:'2026-03-05',note:'',isIncome:false},
-      {id:253,name:'غاز المستودع',amount:190,cat:'مصروفات عمومية',date:'2026-03-08',note:'',isIncome:false},
-      {id:254,name:'إيجار ماكينة القهوة فينا',amount:1300,cat:'صيانة معدات',date:'2026-03-08',note:'',isIncome:false},
-      {id:255,name:'شراء ميزان كامري',amount:95,cat:'مصروفات عمومية',date:'2026-03-11',note:'',isIncome:false},
-      {id:256,name:'شراء لي شطاف',amount:10,cat:'مصروفات عمومية',date:'2026-03-11',note:'',isIncome:false},
-      {id:257,name:'شراء بطانية لسكن العمال',amount:65,cat:'مصروفات عمومية',date:'2026-03-14',note:'',isIncome:false},
-      {id:258,name:'حبة رأس خلاط مطبخ',amount:30,cat:'مصروفات عمومية',date:'2026-03-16',note:'',isIncome:false},
-      {id:259,name:'سلك + حبة قزاز 12 وات',amount:40,cat:'مصروفات عمومية',date:'2026-03-16',note:'',isIncome:false},
-      {id:260,name:'يونيفورم العمال',amount:900,cat:'مصروفات عمومية',date:'2026-03-16',note:'',isIncome:false},
-      {id:261,name:'تعديل لوحة المطعم',amount:150,cat:'مصروفات عمومية',date:'2026-03-17',note:'',isIncome:false},
-      {id:262,name:'شراء بطاريات',amount:40,cat:'مصروفات عمومية',date:'2026-03-17',note:'',isIncome:false},
-      {id:263,name:'لوحات إعلانية',amount:49,cat:'مصروفات عمومية',date:'2026-03-18',note:'',isIncome:false},
-      {id:264,name:'حلاوي وشكولاته للعيد',amount:190,cat:'مصروفات عمومية',date:'2026-03-18',note:'',isIncome:false},
-      {id:265,name:'شراء تمر للمطعم',amount:60,cat:'مصروفات عمومية',date:'2026-03-23',note:'',isIncome:false},
-      {id:266,name:'شراء ورد للمطعم',amount:110,cat:'مصروفات عمومية',date:'2026-03-23',note:'',isIncome:false},
-      {id:267,name:'طباعة كروت',amount:94,cat:'قرطاسية',date:'2026-03-23',note:'',isIncome:false},
-      {id:268,name:'شراء صابون',amount:115,cat:'مصروفات عمومية',date:'2026-03-26',note:'',isIncome:false},
-      {id:269,name:'شراء مساحات للسيارة',amount:100,cat:'صيانة سيارات',date:'2026-03-27',note:'',isIncome:false},
-      {id:270,name:'علاج عامل بريك داون',amount:89.4,cat:'مصروفات عمومية',date:'2026-03-25',note:'',isIncome:false},
-      {id:271,name:'شراء كشاف لسيارة الرينو',amount:15,cat:'صيانة سيارات',date:'2026-03-29',note:'',isIncome:false},
-      {id:272,name:'شراء حبر أسود',amount:45,cat:'قرطاسية',date:'2026-03-08',note:'',isIncome:false},
-      {id:273,name:'شراء ورق تصوير',amount:48,cat:'قرطاسية',date:'2026-03-24',note:'',isIncome:false},
-      {id:274,name:'تسديد شرائح محمد الشهري',amount:1000,cat:'هاتف وانترنت',date:'2026-03-01',note:'',isIncome:false},
-      {id:275,name:'شراء مياه ريست مكتب الإدارة',amount:56,cat:'مصروفات عمومية',date:'2026-03-04',note:'',isIncome:false},
-      {id:276,name:'شراء أوراق A4',amount:86,cat:'قرطاسية',date:'2026-03-05',note:'',isIncome:false},
-      {id:277,name:'شراء مناديل سندس',amount:50,cat:'مصروفات عمومية',date:'2026-03-31',note:'',isIncome:false},
-      {id:278,name:'رمان الرينو',amount:350,cat:'صيانة سيارات',date:'2026-03-01',note:'',isIncome:false},
-      {id:279,name:'صيانة مازدا غيار صدام أمامي',amount:350,cat:'صيانة سيارات',date:'2026-03-04',note:'',isIncome:false},
-      {id:280,name:'تركيب جير رينو عادي',amount:2500,cat:'صيانة سيارات',date:'2026-03-05',note:'',isIncome:false},
-      {id:281,name:'تغيير زيت وفلتر الرينو',amount:105,cat:'صيانة سيارات',date:'2026-03-05',note:'',isIncome:false},
-      {id:282,name:'تغيير بواجي للشيري',amount:190,cat:'صيانة سيارات',date:'2026-03-29',note:'',isIncome:false},
-      {id:283,name:'شحن جوال مصطفى',amount:100,cat:'هاتف وانترنت',date:'2026-03-17',note:'',isIncome:false},
-      {id:284,name:'انترنت فرع ابعاد شهرين',amount:299,cat:'هاتف وانترنت',date:'2026-03-27',note:'',isIncome:false},
-      {id:285,name:'انترنت فرع النساء',amount:138,cat:'هاتف وانترنت',date:'2026-03-30',note:'',isIncome:false},
-      {id:286,name:'تصليح ثلاجة',amount:350,cat:'صيانة معدات',date:'2026-03-02',note:'',isIncome:false},
-      {id:287,name:'تصليح فلتر المطعم',amount:360,cat:'صيانة معدات',date:'2026-03-12',note:'',isIncome:false},
-      {id:288,name:'تغيير مراوح والهود الخارجي',amount:2275,cat:'صيانة معدات',date:'2026-03-15',note:'',isIncome:false},
-      {id:289,name:'صيانة الهود',amount:450,cat:'صيانة معدات',date:'2026-03-18',note:'',isIncome:false},
-      {id:290,name:'اكل عمال (وعد التميز)',amount:170,cat:'اكل عمال',date:'2026-03-02',note:'',isIncome:false},
-      {id:291,name:'اكل عمال (عبير الربيع)',amount:160,cat:'اكل عمال',date:'2026-03-04',note:'',isIncome:false},
-      {id:292,name:'اكل عمال (رز الفارس)',amount:218,cat:'اكل عمال',date:'2026-03-04',note:'',isIncome:false},
-      {id:293,name:'اكل عمال (الزيداني)',amount:228,cat:'اكل عمال',date:'2026-03-14',note:'',isIncome:false},
-      {id:294,name:'بنزين الشيري (متعدد)',amount:550,cat:'بنزين',date:'2026-03-31',note:'مجموع رحلات',isIncome:false},
-      {id:295,name:'بنزين الرينو (متعدد)',amount:796.89,cat:'بنزين',date:'2026-03-31',note:'مجموع رحلات',isIncome:false},
-      {id:296,name:'بنزين التيوتا (متعدد)',amount:221.89,cat:'بنزين',date:'2026-03-31',note:'',isIncome:false},
-    ];
-    mar.nid=300;
-    save();
-  }
-
-  A.cy=2026; A.cm=0;
-  bYS();bMT();
-  document.getElementById('coNm').textContent=A.company;
-  rDash();
-})();
-</script>
-  <!-- Firebase Libraries -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-<script>
-  // Firebase Configuration for Neotrish App
-  const firebaseConfig = {
-    databaseURL: "https://neotrish-app-default-rtdb.firebaseio.com/"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  // Function to save data to the cloud on input
-  function uploadData() {
-    const inputs = document.querySelectorAll('input, select, textarea');
-    const data = {};
-    inputs.forEach(input => {
-      if (input.id) data[input.id] = input.value;
-    });
-    db.ref('system_data').set(data);
-  }
-
-  // Function to load data from the cloud on page load
-  function downloadData() {
-    db.ref('system_data').once('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        Object.keys(data).forEach(id => {
-          const input = document.getElementById(id);
-          if (input) input.value = data[id];
-        });
-      }
-    });
-  }
-
-  // Initialize data loading and real-time syncing
-  window.onload = () => {
-    downloadData();
-    document.body.addEventListener('input', uploadData);
-  };
-</script>
-</body>
-</html>
+      ${hd?`<div class="amc-r">↑ ${fmt(c.rev)}</div><div class="amc-n ${c.net>=0?'p':'n'}">صافي: ${fmt(c.net)}</div>`:`<div 
