@@ -513,8 +513,32 @@ function save(){
       if(!r.ok)throw new Error(r.status);
       toast('✅ تم الحفظ السحابي','ok');
       // احفظ محلياً أيضاً كنسخة احتياطية
-      try{localStorage.setItem('neotrish_v1',JSON.stringify(getPayload()));}catch{}
-    })
+try {
+
+  // حفظ محلي
+  localStorage.setItem(
+    'neotrish_v1',
+    JSON.stringify(getPayload())
+  );
+
+  // حفظ سحابي Firebase
+  fetch(FB_URL, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(getPayload())
+  })
+  .then(() => {
+    console.log("Saved To Cloud");
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+
+} catch (e) {
+  console.error(e);
+}    })
     .catch(e=>toast('خطأ في الحفظ: '+e.message,'err'))
     .finally(()=>{
       saving=false;
